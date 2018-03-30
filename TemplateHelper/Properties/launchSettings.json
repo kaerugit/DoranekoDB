@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TemplateHelper": {
+      "commandName": "Project",
+      "commandLineArgs": "--connectionstring \"Data Source=.\\SQLEXPRESS;Initial Catalog=DoranekoDB;Integrated Security=True;\" --lang VB"
+    }
+  }
+}
