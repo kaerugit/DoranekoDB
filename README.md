@@ -15,20 +15,21 @@ SQLï∂ÇÉSÉäÉSÉäèëÇ¢ÇƒÅADataTableÅiDataSetÅjÇ™ëÚéRèoÇƒÇ≠ÇÈÇÊÇ§Ç»ÉvÉçÉWÉFÉNÉgÇ…Ç®ä
 Å@ÅÀ(VSÇÃÉoÅ[ÉWÉáÉìÇ…Ç‡ÇÊÇËÇ‹Ç∑Ç™)å©ÇΩñ⁄SQLï∂ÇÃÇÊÇ§Ç»ãLèqÇ™â¬î\Ç∆Ç»ÇËÇ‹Ç∑ÅB
 
 Åûí èÌÇÃSQL
+
 dt = db.GetDataTable($@"
         select 
             *
         from 
             {DbTable.T_TEST.Name} 
         where
-            {db.AddWhereParameter(DbTable.T_TEST.ÉeÉXÉgópî‘çÜ.Name, 1)}Å@ÅEÅEÅEá@
-                    
+            {db.AddWhereParameter(DbTable.T_TEST.ÉeÉXÉgópî‘çÜ.Name, 1)}Å@ÅEÅEÅEá@             
     ");
 
 Å¶á@ÇÃèÍèäÇ™ÉpÉâÉÅÅ[É^âª(ÉeÉXÉgópî‘çÜ=@1)Ç≥ÇÍÇ‹Ç∑ÅB
 Å@ÅÀ >= <= Ç»Ç«ÇÃãLèqÇ‡â¬î\Ç≈Ç∑ÅB
 
 Åûí èÌÇÃSQL(INãÂ)Å@Å@AddWhereParameter ÇÃèÍèäÇ≈Å@ÉeÉXÉgópî‘çÜ in (xx,yy) ÇÃÉfÅ[É^Ç™çÏê¨
+
 var lst = new List<int>() { 1, 2 };
 dt = db.GetDataTable($@"
         select 
@@ -36,8 +37,7 @@ dt = db.GetDataTable($@"
         from 
             {DbTable.T_TEST.Name}  
         where
-            {db.AddWhereParameter(DbTable.T_TEST.ÉeÉXÉgópî‘çÜ.Name, lst)}
-                    
+            {db.AddWhereParameter(DbTable.T_TEST.ÉeÉXÉgópî‘çÜ.Name, lst)}         
     ");
 
 ### DemoRun
