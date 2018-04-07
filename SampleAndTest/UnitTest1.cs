@@ -13,6 +13,12 @@ namespace SampleAndTest
 {
     public class UnitTest1
     {
+        enum DATA
+        {
+            one = 1
+        }
+
+
         public UnitTest1()
         {
             CommonData.InitDB();
@@ -47,6 +53,7 @@ namespace SampleAndTest
 
             db.BeginTransaction();
 
+            //テスト用データの挿入
             using (var tbl = new TableHelper(db, DbTable.T_TEST.Name))      //好みで・・
             {
                 //■■通常の挿入　SQL文を利用しての挿入■■
@@ -185,6 +192,111 @@ namespace SampleAndTest
 
         }
 
+        [Fact(DisplayName = "通常のSELECT")]
+        public void Select1()
+        {
+
+            var db = CommonData.GetDB();
+
+
+            //最大の番号を取得
+            var dt = db.GetDataTable($@"
+                        select 
+                            isnull(max({DbTable.T_TEST.テスト用番号.Name}),0) as maxdata 
+                        from
+                            {DbTable.T_TEST.Name}
+                ");
+
+            int maxData = 0;
+            if (dt.Rows.Count > 0)
+            {
+                maxData = int.Parse(dt.Rows[0]["maxdata"].ToString());
+            }
+
+
+
+            //通常のwhere
+            dt = db.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name} 
+                    where
+                        {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, maxData)}
+                    
+               ");
+
+            Assert.Equal(dt.Rows.Count, 1);
+
+            //■■in句■■
+            var lst = new List<int>() { maxData, maxData - 1 };
+            //AddWhereParameter の場所で　テスト用番号 in (xx,yy) のデータが作成
+            dt = db.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name}  
+                    where
+                        {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, lst)}
+                    
+               ");
+            Assert.True(dt.Rows.Count > 1);
+
+
+            //■■enumのテスト■■
+            dt = db.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name}   
+                    where
+                        {db.AddWhereParameter(DbTable.T_TEST.TEXTMAX.Name, DATA.one)}
+               ");
+
+            Assert.True(dt.Rows.Count > 1);
+
+            //■■以上■■
+            //テスト用番号>=xx 
+            dt = db.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name}   
+                    where
+                        {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, maxData, DBMastar.WHERE_FUGO.Ijyo)}
+                    
+               ");
+
+            Assert.Equal(dt.Rows.Count, 1);
+
+
+            //■■Likeのテスト■■
+            dt = db.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name}   
+                    where
+                        {db.AddWhereParameter(DbTable.T_TEST.TEXTDATA.Name, "1234", DBMastar.WHERE_FUGO.Like)}
+               ");
+
+            Assert.True(dt.Rows.Count > 1);
+
+            //■■フラグのテスト■■
+            dt = db.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name}   
+                    where
+                        {db.AddWhereParameter(DbTable.T_TEST.フラグ.Name, null)}
+               ");
+
+            Assert.True(dt.Rows.Count > 1);
+
+        }
+
+
         [Fact(DisplayName = "データ追加・更新(Dataset)")]
         public void DBDataSet()
         {
@@ -206,7 +318,7 @@ namespace SampleAndTest
             var dt = db.DataSet.Tables[0];
             var nowString = System.DateTime.Now.ToString("yyyyMMddHHmmss");
             //100件データを作成
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 100; i++)
             {
                 var drNew = dt.NewRow();
 
@@ -437,12 +549,19 @@ namespace SampleAndTest
                 db.Rollback();
             }
 
+        }
+
+        [Fact(DisplayName = "パラメータの保存")]
+        public void SaveParameter()
+        {
+            var db = CommonData.GetDB();
+
             //パラメータの保存
             db.ClearSQLParameter();
 
-            var lst = new List<int>() {100,200};
+            var lst = new List<int>() { 100, 200 };
 
-            sql = $@"
+            var sql = $@"
                  select 
                    * 
                  from
@@ -462,176 +581,11 @@ namespace SampleAndTest
 
             //戻す（この場合System.DBNull.Value ⇒ nullに変換されるのがDBMastarクラスで対応済）
             db2.SQLParameter = Newtonsoft.Json.JsonConvert.DeserializeObject<DBSQLParameter>(save);
-            var dt2= db2.GetDataTable(sql);
+            var dt2 = db2.GetDataTable(sql);
 
             Assert.Equal(datacount, dt2.Rows.Count);
 
-            /*
-            //todo 条件の保存
-            var lst = new List<string>() { "aaa","bbb"};
-
-            var aastring = DBMastar.DeepCopy<List<string>>(lst);
-
-            var aa = DBMastar.DeepCopy<DBParameterDictionary>(db.ParameterDictionary);
-
-            var serialString = db.ParameterDictionary.ToString();
-
-            db.ParameterDictionary.Clear();
-
-            var dbSerial = CommonData.GetDB("");
-
-            dbSerial.ParameterDictionary.DeSerial(serialString);
-
-            var ssss = "aaaa";
-            */
-
-            //元のデータを開く
-            /*
-            db.OpenDataSet(sql);
-
-            var dtUpdate = db.DataSet.Tables[0];
-
-            var dtInputConvrt = dtUpdate.Clone();   //構造体だけコピー
-
-            foreach(System.Data.DataRow dr in dtInput.Rows)
-            {
-                var drNew = dtInputConvrt.NewRow();
-                dr["TS"] = System.DBNull.Value;
-                drNew.ItemArray = dr.ItemArray;
-                dtInputConvrt.Rows.Add(drNew);
-                dtInputConvrt.Rows[dtInputConvrt.Rows.Count - 1].AcceptChanges();
-
-                if  ( dr[DbTable.T_TEST.ID_AUTO.Name] == System.DBNull.Value)
-                {
-                    dtInputConvrt.Rows[dtInputConvrt.Rows.Count - 1].SetAdded();
-                }
-                else { 
-                dtInputConvrt.Rows[dtInputConvrt.Rows.Count - 1].SetModified();
-                }
-            }
-            //dtInputConvrt.AcceptChanges();
-
-            //マージ
-            dtUpdate.Merge(dtInputConvrt,true);
-
-
-
-            db.UpdateDataSet();
-            */
         }
 
-        enum DATA
-        {
-            one = 1
-        }
-
-        [Fact(DisplayName = "データ追加")]
-        public void DB()
-        {
-        }
-
-        [Fact(DisplayName = "通常のSELECT")]
-        public void Select1()
-        {
-
-            var db = CommonData.GetDB();
-
-
-            //最大の番号を取得
-            var dt = db.GetDataTable($@"
-                        select 
-                            isnull(max({DbTable.T_TEST.テスト用番号.Name}),0) as maxdata 
-                        from
-                            {DbTable.T_TEST.Name}
-                ");
-
-            int maxData = 0;
-            if (dt.Rows.Count > 0)
-            {
-                maxData = int.Parse(dt.Rows[0]["maxdata"].ToString());
-            }
-
-
-
-            //通常のwhere
-            dt = db.GetDataTable($@"
-                    select 
-                        *
-                    from 
-                        {DbTable.T_TEST.Name} 
-                    where
-                        {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, maxData)}
-                    
-               ");
-
-            Assert.Equal(dt.Rows.Count, 1);
-
-            //■■in句■■
-            var lst = new List<int>() { maxData, maxData - 1 };
-            //AddWhereParameter の場所で　テスト用番号 in (xx,yy) のデータが作成
-            dt = db.GetDataTable($@"
-                    select 
-                        *
-                    from 
-                        {DbTable.T_TEST.Name}  
-                    where
-                        {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, lst)}
-                    
-               ");
-            Assert.True(dt.Rows.Count > 1);
-
-
-            //■■enumのテスト■■
-            dt = db.GetDataTable($@"
-                    select 
-                        *
-                    from 
-                        {DbTable.T_TEST.Name}   
-                    where
-                        {db.AddWhereParameter(DbTable.T_TEST.TEXTMAX.Name, DATA.one)}
-               ");
-
-            Assert.True(dt.Rows.Count > 1);
-
-            //■■以上■■
-            //テスト用番号>=xx 
-            dt = db.GetDataTable($@"
-                    select 
-                        *
-                    from 
-                        {DbTable.T_TEST.Name}   
-                    where
-                        {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, maxData, DBMastar.WHERE_FUGO.Ijyo)}
-                    
-               ");
-
-            Assert.Equal(dt.Rows.Count, 1);
-
-
-            //■■Likeのテスト■■
-            dt = db.GetDataTable($@"
-                    select 
-                        *
-                    from 
-                        {DbTable.T_TEST.Name}   
-                    where
-                        {db.AddWhereParameter(DbTable.T_TEST.TEXTDATA.Name, "1234", DBMastar.WHERE_FUGO.Like)}
-               ");
-
-            Assert.True(dt.Rows.Count > 1);
-
-            //■■フラグのテスト■■
-            dt = db.GetDataTable($@"
-                    select 
-                        *
-                    from 
-                        {DbTable.T_TEST.Name}   
-                    where
-                        {db.AddWhereParameter(DbTable.T_TEST.フラグ.Name, null)}
-               ");
-
-            Assert.True(dt.Rows.Count > 1);
-
-        }
     }
 }

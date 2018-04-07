@@ -52,10 +52,11 @@ namespace DoranekoDB
             //"TABLE_NAME","COLUMN_NAME","DATA_TYPE","IS_PRIMARYKEY","IS_NULLABLE","COLUMN_DEFAULT","IS_AUTO_NUMBER","IS_IGNORE_FIELD"
             //"M_マスタ","コード","varchar(2)","1","","","",""
             //"M_マスタ","値","numeric(5,3)","","","","",""
+            // ⇒　全部出力したものは　Query.csv　を参考（他DBでもこちらと同じ形式ができればベスト！）
 
 
             //参考：http://ng-notes.blogspot.jp/2011/03/sql-server.html
-            //TABLE_DESCRIPTION 等はドキュメント用（改行があれば論理名とみなす フリーソフトSQL Mk - 2の仕様に近づけてみる）
+            //TABLE_DESCRIPTION(LOGICAL_COLUMN_NAME)はドキュメント用（改行があれば論理名とみなす フリーソフトSQL Mk - 2の仕様に近づけてみる）
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
@@ -181,6 +182,7 @@ namespace DoranekoDB
             sb.Append("      /* AND [COL].TABLE_NAME = '' */ ");
             sb.Append("      /* AND [COL].COLUMN_NAME LIKE '%Kingaku%' */ ");
             sb.Append("  ) AS SUB ");
+
             sb.Append("ORDER BY ");
             sb.Append("    TABLE_NAME ");
             sb.Append("  , ORDINAL_POSITION ");

@@ -941,37 +941,7 @@ namespace DoranekoDB
         }
         #endregion
 
-        //TODO
-        public static T DeepCopy<T>(T original)
-        {
-            // シリアル化した内容を保持するメモリーストリームを生成
-            MemoryStream stream = new MemoryStream();
-            try
-            {
-                // バイナリ形式でシリアライズするためのフォーマッターを生成
-                BinaryFormatter formatter = new BinaryFormatter();
-                // コピー元のインスタンスをシリアライズ
-                formatter.Serialize(stream, original);
-                // メモリーストリームの現在位置を先頭に設定
-                stream.Position = 0L;
-
-                // メモリーストリームの内容を逆シリアル化
-                //return (T)formatter.Deserialize(stream);
-
-
-                var serialString = Encoding.UTF8.GetString(stream.ToArray());
-                stream = new MemoryStream(Encoding.UTF8.GetBytes(serialString));
-                stream.Position = 0L;
-
-                return (T)formatter.Deserialize(stream);
-
-
-            }
-            finally
-            {
-                stream.Close();
-            }
-        }
+       
 
         #region IDisposable Support
         private bool disposedValue = false; // 重複する呼び出しを検出するには

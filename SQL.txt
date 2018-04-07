@@ -1,0 +1,140 @@
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'更新日時'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'入力日'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'フラグ'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'金額'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TS'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TEXTFIX'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TEXTDATA'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TEXTMAX'
+GO
+
+EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'ID_AUTO'
+GO
+
+ALTER TABLE [dbo].[T_TEST] DROP CONSTRAINT [DF_T_TEST_フラグ]
+GO
+
+ALTER TABLE [dbo].[T_TEST] DROP CONSTRAINT [DF_T_TEST_金額]
+GO
+
+/****** Object:  Table [dbo].[T_TEST]    Script Date: 2018/04/08 1:07:41 ******/
+DROP TABLE [dbo].[T_TEST]
+GO
+
+/****** Object:  Table [dbo].[T_TEST]    Script Date: 2018/04/08 1:07:41 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[T_TEST](
+	[ID_AUTO] [int] IDENTITY(1,1) NOT NULL,
+	[TEXTMAX] [nvarchar](max) NULL,
+	[TEXTDATA] [nvarchar](50) NULL,
+	[TEXTFIX] [varchar](50) NULL,
+	[TS] [timestamp] NULL,
+	[バイナリー] [varbinary](max) NULL,
+	[金額] [money] NULL,
+	[フラグ] [bit] NOT NULL,
+	[入力日] [date] NULL,
+	[テスト用番号] [smallint] NULL,
+	[更新日時] [datetime] NULL,
+ CONSTRAINT [PK_T_TEST] PRIMARY KEY CLUSTERED 
+(
+	[ID_AUTO] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[T_TEST] ADD  CONSTRAINT [DF_T_TEST_金額]  DEFAULT ((0)) FOR [金額]
+GO
+
+ALTER TABLE [dbo].[T_TEST] ADD  CONSTRAINT [DF_T_TEST_フラグ]  DEFAULT ((0)) FOR [フラグ]
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'オートナンバー' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'ID_AUTO'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TEXTMAX'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TEXTDATA'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TEXTFIX'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'タイムスタンプ
+コメントテスト
+更に改行' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'TS'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'金額'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'フラグ'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'入力日'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST', @level2type=N'COLUMN',@level2name=N'更新日時'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'T_テスト
+テスト用テーブル' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'T_TEST'
+GO
+
+
+
+
+/****** Object:  Table [dbo].[T_TEST_COPY]    Script Date: 2018/04/08 1:07:58 ******/
+DROP TABLE [dbo].[T_TEST_COPY]
+GO
+
+/****** Object:  Table [dbo].[T_TEST_COPY]    Script Date: 2018/04/08 1:07:58 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[T_TEST_COPY](
+	[ID_AUTO] [int] NOT NULL,
+	[TEXTMAX] [nvarchar](max) NULL,
+	[TEXTDATA] [nvarchar](50) NULL,
+	[TEXTFIX] [varchar](50) NULL,
+	[TS] [timestamp] NULL,
+	[バイナリー] [varbinary](max) NULL,
+	[金額] [money] NULL,
+	[フラグ] [bit] NOT NULL,
+	[入力日] [date] NULL,
+	[テスト用番号] [smallint] NULL,
+	[更新日時] [datetime] NULL,
+ CONSTRAINT [PK_T_TEST_COPY] PRIMARY KEY CLUSTERED 
+(
+	[ID_AUTO] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+

@@ -64,7 +64,7 @@ namespace TemplateHelper
                 Console.WriteLine(dic.Key + ":" + dic.Value);
             }
 
-            //dotnet TemplateHelper.dll --connectionstring "Data Source=.\SQLEXPRESS;Initial Catalog=DoranekoDB;Integrated Security=True; --lang VB"
+            //dotnet TemplateHelper.dll --connectionstring "Data Source=.\SQLEXPRESS;Initial Catalog=DoranekoDB;Integrated Security=True;" --lang VB
 
             var template = "//";
 
