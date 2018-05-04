@@ -26,21 +26,8 @@ namespace DoranekoDB
         public List<string> IgnoreFieldList { get; set; } = new List<string>();
 
 
-        /// <summary>定義(Dbtable)に無いものは代用の定義を使う場合にセット</summary>
+        /// <summary>定義(Dbtable)に無いものは代用の定義を使う場合にセット　※DBFieldData.DummyFieldChangePublicのローカル版</summary>
         public Dictionary<string, string> DummyFieldChange { get; set; } = null;
-
-        /// <summary>値をテーブル名付きでセット</summary>
-        /// <remarks>
-        /// 使い回ししたい場合、以下のコードで使用可
-        /// TableHelper.FullNameFlag = True
-        /// TableHelper.Reset()
-        /// </remarks>
-        //public  bool FullNameFlag { get; set; }
-
-
-        /// <summary>オートナンバーのフィールドを無視する場合：true</summary>
-        //public  bool AutoNumberIgnore { get; set; }
-
 
         string TableName { get; set; }
         private DBMastar db;
@@ -71,14 +58,15 @@ namespace DoranekoDB
         /// </remarks>
         public FIELD_GET_TYPE FieldGetType;
 
+
         /// <summary>
-        ///TableHelper
-        ///</summary>
-        ///<param name="paratableName">テーブル名</param>
-        ///<param name="parafullNameFlag">テーブル名付でセット</param>
-        ///<param name="paraAutoNumberIgnore">オートナンバー(タイムスタンプ列)を無視する場合：true(すべてのフィールドが必要な場合はfalse)</param>
+        /// TableHelper
+        /// </summary>
+        /// <param name="paradb">データベースオブジェクト</param>
+        /// <param name="paraTableName">テーブル名</param>
+        /// <param name="fgt">取得オプション</param>
+        /// <param name="paraDummyFieldChange">定義(Dbtable)に無いものは代用の定義を使う場合にセット　※DBFieldData.DummyFieldChangePublicのローカル版</param>
         public TableHelper(DBMastar paradb, string paraTableName, FIELD_GET_TYPE fgt = FIELD_GET_TYPE.None, Dictionary<string, string> paraDummyFieldChange = null)
-        //, bool paraFullNameFlag = false, bool paraAutoNumberIgnore = true)
         {
             this.db = paradb;
             this.TableName = paraTableName;

@@ -17,6 +17,7 @@ namespace DoranekoDB
             this.ParameterKigo = "@";
             this.RenketuMoji = "+";
             this.DummyTable = "";
+            this.CastSQL = "cast({0} as {1})";
         }
 
         protected override DbConnection GetConnection()

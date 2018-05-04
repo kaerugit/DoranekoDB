@@ -21,6 +21,7 @@ namespace SampleAndTest
 
         public UnitTest1()
         {
+            //必ず1回実行
             CommonData.InitDB();
         }
 
@@ -145,14 +146,6 @@ namespace SampleAndTest
                     ";
 
                 db.Execure(sql);
-
-                //パラメータのコピー
-                //var save = Newtonsoft.Json.JsonConvert.SerializeObject(db.SQLParameter);
-
-                //db.ClearSQLParameter();
-                //db.SQLParameter = Newtonsoft.Json.JsonConvert.DeserializeObject<DBSQLParameter>(save);
-                //db.Execure(sql);
-
             }
 
 
@@ -212,8 +205,6 @@ namespace SampleAndTest
             {
                 maxData = int.Parse(dt.Rows[0]["maxdata"].ToString());
             }
-
-
 
             //通常のwhere
             dt = db.GetDataTable($@"

@@ -111,7 +111,7 @@ public class CommonData
                 return paraData;
             };
 
-
+        //決まった項目の値をセット(Execute系)　　★意味不明な場合はコメント推奨
         db.InsertUpdateDataParameter = (paraSqlUpdateType, paraIsTransaction, paraFieldList, paraField) =>
         {
             if (paraIsTransaction)
@@ -132,6 +132,14 @@ public class CommonData
             }
         };
 
+
+        //（必要であれば）SQLLogを吐き出し
+        /*
+        db.SetSQLLog = (paraSQL) =>
+        {
+            //log4net　などを利用し、paraSQLをどこかに吐き出すPGを作成
+        };
+        */
 
         return db;
     }

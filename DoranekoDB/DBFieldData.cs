@@ -60,6 +60,8 @@ namespace DoranekoDB
         /// <remarks>
         /// select *, '追加' as 追加項目　←　を実行した場合、追加項目に定義が紐づかないので
         /// 定義を紐づかせるために設定が必要となる
+        /// 
+        /// こちらの場合 Dictionary("追加項目") = DbTable.～　の設定となります。
         /// </remarks>
         public static Dictionary<string, string> DummyFieldChangePublic { get; set; } = null;
 

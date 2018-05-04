@@ -58,6 +58,13 @@ namespace DoranekoDB
         /// </remarks>
         public Action<DBFieldData.SQL_UPDATE_TYPE, Boolean, List<String>, Dictionary<String, String>> InsertUpdateDataParameter = null;
 
+        /// <summary>SQLのログ（パラメータ解除後）</summary>
+        /// <remarks>
+        /// 実際発行のSQL文とは違うので注意
+        /// </remarks>
+        public Action<string> SetSQLLog = null;
+
+
         /// <summary>OpenDataSet使用時テーブルのスキーマも取得する場合：true</summary>
         /// <remarks>取得後自動的にfalseに変更されます</remarks>
         bool IsSchema { get; set; } = false;
@@ -79,6 +86,9 @@ namespace DoranekoDB
         ///  </remarks>
         public String DummyTable { get; set; }
 
+        /// <summary>Cast用SQL</summary>
+        /// <remarks>SQLのデバッグで使用</remarks>
+        public String CastSQL { get; set; }
 
         /// <summary>Like検索の記号</summary>
         protected string LikeMoji { get; set; } = "%";
@@ -272,6 +282,7 @@ namespace DoranekoDB
                 var eachPara = eachParaValue;
                 //パラメータにセットする値が増える場合は注意
                 DBUseParameter para; // DbParameter = Me.GetParameter()
+                para.FieldName = fileName;
                 para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "p";
 
                 //列挙型なら数字に変更
@@ -684,6 +695,7 @@ namespace DoranekoDB
             {
                 //パラメータの値がダブってはいけないので違う番号を付与
                 DBUseParameter para;
+                para.FieldName = copyidb.SQLParameter[eachKey].FieldName;
                 para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "c";
                 para.DbType = copyidb.SQLParameter[eachKey].DbType;
                 para.Value = copyidb.SQLParameter[eachKey].Value;
@@ -849,8 +861,16 @@ namespace DoranekoDB
             cmd.CommandText = sql;
             cmd.CommandTimeout = this.CommandTimeout;
 
-            //該当するキーが存在するかどうか(基本的にはパラメータは残りっぱなしなので, 著しく速度が低下する場合は、ClearParameterすることをお勧めします)
-            if (this.SQLParameter.Keys.Count > 0)
+
+            var sqlLog = "";
+            if (SetSQLLog != null)
+            {
+                sqlLog = sql;
+            }
+
+
+                //該当するキーが存在するかどうか(基本的にはパラメータは残りっぱなしなので, 著しく速度が低下する場合は、ClearParameterすることをお勧めします)
+                if (this.SQLParameter.Keys.Count > 0)
             {
                 foreach (string eachKey in this.SQLParameter.Keys)
                 {
@@ -868,6 +888,32 @@ namespace DoranekoDB
                             para.Value = motoPara.Value;
                         }
                         cmd.Parameters.Add(para);
+
+
+                        if (string.IsNullOrEmpty(sqlLog) == false)
+                        {
+                            var value = "";
+                            if (motoPara.Value == null)
+                            {
+                                value = "null";
+                            }
+                            else {
+                                value = "'" + motoPara.Value.ToString().Replace("'","''") + "'";
+                            }
+
+                            var dataType = "";
+                            foreach (var fm in DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName))
+                            {
+                                dataType = fm.DATA_TYPE;
+                            }
+
+                            if (string.IsNullOrEmpty(dataType)==false )
+                            {
+                                value = string.Format(this.CastSQL, value, dataType);
+                            }
+
+                            sqlLog = sqlLog.Replace(eachKey,value);
+                        }
                     }
 
                 }
@@ -876,8 +922,13 @@ namespace DoranekoDB
 
             if (this.IsTransaction == true)
             {
-
                 cmd.Transaction = this.Transaction;
+            }
+
+            //共通項目の更新
+            if (string.IsNullOrEmpty(sqlLog) == false)
+            {
+                SetSQLLog(sqlLog);
             }
 
             return cmd;

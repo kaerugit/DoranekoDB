@@ -12,6 +12,9 @@ namespace DoranekoDB
     [Serializable]
     public struct DBUseParameter
     {
+        /// <summary>フィールド名</summary>
+        /// <remarks>デバッグSQLで使用</remarks>
+        public string FieldName;
         public string ParameterName;
         public DbType DbType;
         public object Value;

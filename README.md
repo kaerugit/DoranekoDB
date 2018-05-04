@@ -1,9 +1,9 @@
 # DoranekoDB
 .NET Standard 2.0`  ƒf[ƒ^ƒx[ƒXƒAƒNƒZƒX—p(Œ»İSQLServer‚Ì‚İ)ƒNƒ‰ƒX‚Å‚·B  
-ŠÈˆÕi‹^—jorm‚Æ‚¢‚¤‚©ADB‚Ì‹Lq‚ğŒø—¦‰»o—ˆ‚Ü‚·B  
+ŠÈˆÕi‹^—jorm‚Æ‚¢‚¤‚©ADB‚Ì‹Lq‚ğŒø—¦‰»‚·‚é–‚ªo—ˆ‚Ü‚·B  
 
 ## Description
-entity framework ‚Å–â‘è‚È‚¯‚ê‚Î‚»‚¿‚ç‚Ì—˜—p‚ğ‚¨Š©‚ß‚µ‚Ü‚·B  
+entity framework ‚Å–â‘è‚È‚¯‚ê‚ÎA‚»‚¿‚ç‚Ì—˜—p‚ğ‚¨Š©‚ß‚µ‚Ü‚·B  
 SQL•¶‚ğƒSƒŠƒSƒŠ‘‚¢‚ÄADataTableiDataSetj‚ª‘òRo‚Ä‚­‚é‚æ‚¤‚ÈƒvƒƒWƒFƒNƒg‚É‚¨Š©‚ß‚µ‚Ü‚·B  
 ËORM‚Æ‚¢‚¤‚æ‚èAƒpƒ‰ƒ[ƒ^‰»‚ÌŠÈˆÕ‰»‹y‚ÑƒCƒ“ƒeƒŠƒWƒFƒ“ƒX‚É‚æ‚éƒe[ƒuƒ‹ƒtƒB[ƒ‹ƒh‚Ì‰¶Œb‚ğÅ‘åŒÀ‚É—˜—p‚Å‚«‚éƒNƒ‰ƒX‚Å‚·B  
 @ËDB‚Ì\‘¢‚ª•ÏX‚µ‚½ê‡‚ÍAƒRƒ“ƒpƒCƒ‹ƒGƒ‰[‚Æ‚È‚è‚Ü‚·‚Ì‚ÅADB‚Ì•ÏX‚É“K‘Î‰‚Å‚«‚éŒ`®‚Æ‚È‚Á‚Ä‚¨‚è‚Ü‚·B  
@@ -16,7 +16,7 @@ SQL•¶‚ğƒSƒŠƒSƒŠ‘‚¢‚ÄADataTableiDataSetj‚ª‘òRo‚Ä‚­‚é‚æ‚¤‚ÈƒvƒƒWƒFƒNƒg‚É‚¨Š
 
 ’Êí‚ÌSQL
 
-dt = db.GetDataTable($@"  
+Datatable dt = db.GetDataTable($@"  
         select   
             *  
         from   
@@ -31,7 +31,7 @@ dt = db.GetDataTable($@"
 ’Êí‚ÌSQL(IN‹å)@@AddWhereParameter ‚ÌêŠ‚Å@ƒeƒXƒg—p”Ô† in (xx,yy) ‚Ìƒf[ƒ^‚ªì¬
 
 var lst = new List<int>() { 1, 2 };  
-dt = db.GetDataTable($@"  
+Datatable dt = db.GetDataTable($@"  
         select   
             *  
         from   
