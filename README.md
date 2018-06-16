@@ -65,7 +65,7 @@ DoranekoDBプロジェクトとProjectCommonプロジェクト（要改造）が必要となります。
 
 以下、各プロジェクトの大まかな説明です。  
 DoranekoDBプロジェクト　　　→　データベースアクセス(SQL文発行)本体  
-ProjectCommonプロジェクト　 →　各自業務にあった共通のプロジェクト  
+ProjectCommonプロジェクト　 →　各自業務用にカスタマイズした共通のプロジェクト  
 SampleAndTestプロジェクト　 →　テスト用プロジェクト  
 TemplateHelperプロジェクト　→　DBTable作成用プロジェクト
 

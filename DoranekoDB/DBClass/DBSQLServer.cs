@@ -192,13 +192,18 @@ namespace DoranekoDB
         }
         public override void GetSqlTypeToDbType(string sqlTypeString, out DbType pdbType, out int size, out decimal maxValue, out decimal minValue)
         {
-            int index = sqlTypeString.IndexOf("(");
+            int kakkoindex = sqlTypeString.IndexOf("(");
             string sqlTypeCheckString = sqlTypeString;
-            if (index >= 0)
+            if (kakkoindex >= 0)
             {
-                sqlTypeCheckString = sqlTypeCheckString.Substring(0, index);
+                sqlTypeCheckString = sqlTypeCheckString.Substring(0, kakkoindex);
             }
 
+            size = 0;
+            maxValue = 0;
+            minValue = 0;
+
+            //DBMastar.cs  changeValueメソッドで でこちらで判定された型で範囲チェックを行っている
             switch (sqlTypeCheckString.ToLower())
             {
                 case "numeric":
@@ -260,12 +265,9 @@ namespace DoranekoDB
                     break;
             }
 
-            size = 0;
-            maxValue = 0;
-            minValue = 0;
-            if (index >= 0)
+            if (kakkoindex >= 0)
             {
-                string sizeString = sqlTypeString.Substring(index);
+                string sizeString = sqlTypeString.Substring(kakkoindex);
                 if (string.IsNullOrEmpty(sizeString.Trim()))
                 {
                 }
@@ -291,16 +293,18 @@ namespace DoranekoDB
 
                                 if (size <= 0)       //nvarchar(max)
                                 {
-                                    size = 8000;
+                                    //size = 8000; //無制限とする
                                 }
                             }
                         }
                     }
                     else
                     {
+                        //decimal(5, 3) など
                         if (string.IsNullOrEmpty(sizeSplit[0]) == false && string.IsNullOrEmpty(sizeSplit[1]) == false)
                         {
-                            maxValue = decimal.Parse("".PadLeft(int.Parse(sizeSplit[0]), '9') + "." + "".PadLeft(int.Parse(sizeSplit[1]), '9'));
+                            var seisu = int.Parse(sizeSplit[0]) - int.Parse(sizeSplit[1]);
+                            maxValue = decimal.Parse("".PadLeft(seisu, '9') + "." + "".PadLeft(int.Parse(sizeSplit[1]), '9'));
                             minValue = maxValue * -1;
                         }
                     }

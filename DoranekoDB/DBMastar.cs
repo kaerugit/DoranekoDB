@@ -447,7 +447,7 @@ namespace DoranekoDB
 
                 if (data == null || data == System.DBNull.Value)
                 {
-                    data = DBFalseValue;
+                    data = DBMastar.DBFalseValue;
                 }
                 else
                 {
@@ -455,16 +455,16 @@ namespace DoranekoDB
                     {
                         if ((outValue == true))
                         {
-                            data = DBTrueValue;
+                            data = DBMastar.DBTrueValue;
                         }
                         else
                         {
-                            data = DBFalseValue;
+                            data = DBMastar.DBFalseValue;
                         }
                     }
                     else
                     {
-                        data = DBFalseValue;
+                        data = DBMastar.DBFalseValue;
                     }
                 }
 
