@@ -737,7 +737,7 @@ namespace DoranekoDB
         /// </summary>
         /// <param name="sql"></param>
         /// <returns></returns>
-        public int Execure(string sql)
+        public int Execute(string sql)
         {
             DbCommand cmd = getSQLCommand(sql);
             return cmd.ExecuteNonQuery();

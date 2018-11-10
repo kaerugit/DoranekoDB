@@ -57,7 +57,7 @@ namespace SampleAndTest
             //テスト用データの挿入
             using (var tbl = new TableHelper(db, DbTable.T_TEST.Name))      //好みで・・
             {
-                //■■通常の挿入　SQL文を利用しての挿入■■
+                //■■通常の挿入　SQL文を利用しての挿入■■　ごちゃごちゃやってますが、結論　db.Execute(　で実行されるsql文を確認するのが早いと思います・・
 
                 //SQLのイメージ
                 //tbl.Field のキー insert into テーブル名(★)
@@ -83,7 +83,7 @@ namespace SampleAndTest
                 //tbl.Field["てすと"] = db.AddParameter(DbTable.T_TEST.フラグ.Name, "aaaa");
 
                 //(InsertIntoSQLを使えば)更新日時はCommonData.GetDB(InsertUpdateDataParameter)内で自動的に更新
-                db.Execure($@"
+                db.Execute($@"
                         insert into {DbTable.T_TEST.Name}
                                 ({tbl.InsertIntoSQL})
                         values 
@@ -103,12 +103,12 @@ namespace SampleAndTest
 
                 maxData++;
                 tbl.AddParameter(DbTable.T_TEST.テスト用番号.Name, maxData);
-                //sql文も可能
+                //sql文(substringの記述)も可能
                 tbl[DbTable.T_TEST.TEXTDATA.Name] = "substring(" + DbTable.T_TEST.TEXTDATA.Name + ",1,10)";     //tbl.Field[] の省略形
                 tbl[DbTable.T_TEST.金額.Name] = "1000";
 
                 //他設定されていないデータは元データの値をinsert
-                db.Execure($@"
+                db.Execute($@"
                         insert into {DbTable.T_TEST.Name}
                                 ({tbl.InsertIntoSQL})
                         select 
@@ -145,7 +145,7 @@ namespace SampleAndTest
 
                     ";
 
-                db.Execure(sql);
+                db.Execute(sql);
             }
 
 
@@ -174,7 +174,7 @@ namespace SampleAndTest
                             "
                      ;
                 //(UpdateSetSQLを使えば)更新日時なども自動でセット
-                db.Execure($@"
+                db.Execute($@"
                         update {DbTable.T_TEST_COPY.Name}
                         set 
                                 {tbl.UpdateSetSQL}
@@ -345,7 +345,7 @@ namespace SampleAndTest
                 dr[DbTable.T_TEST.金額.Name] = decimal.Parse(dr[DbTable.T_TEST.金額.Name].ToString()) + 100;
             }
 
-            //更新
+            //更新（引数指定で　対象テーブルのみ更新も可）
             db.UpdateDataSet("なまえつき");
 
 
@@ -424,7 +424,7 @@ namespace SampleAndTest
                 var tbl = new TableHelper(db, DbTable.T_TEST.Name, paraDummyFieldChange: dummyFieldChange);
                 //現在のデータからCreatetableを行う
                 //ToListするには　using System.Linq;　が必要
-                db.Execure(tbl.GetCreateSQL(tempTableName, dataList[0].Keys.ToList()));
+                db.Execute(tbl.GetCreateSQL(tempTableName, dataList[0].Keys.ToList()));
 
                 //～通常版
                 if (true)
@@ -495,7 +495,7 @@ namespace SampleAndTest
                                     ) as ins
                                 ";
 
-                            dbpara.Execure(sql);
+                            dbpara.Execute(sql);
                         }
                     });
                 }
@@ -520,7 +520,7 @@ namespace SampleAndTest
                                 ) as ins
                            ";
 
-                        db.Execure(sql);
+                        db.Execute(sql);
 
                     }
                 }
@@ -530,7 +530,7 @@ namespace SampleAndTest
             //更新
             db.BeginTransaction();
             var margeSql = SQLHelper.GetMargeSQL(db, DbTable.T_TEST.Name, $" select * from {tempTableName}");
-            db.Execure(margeSql);
+            db.Execute(margeSql);
             try
             {
                 db.Commit();
