@@ -40,19 +40,19 @@ Datatable dt = db.GetDataTable($@"
             {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, lst)}           
     ");
 
-◇insertのSQL
+◇insertのSQL  
 
-//テーブルの定義を開く
-var tbl = new TableHelper(db, DbTable.T_TEST.Name)
-tbl.Field[DbTable.T_TEST.TEXTDATA.Name] = db.AddInsertParameter(DbTable.T_TEST.TEXTDATA.Name, "テスト");
+//テーブルの定義を開く  
+var tbl = new TableHelper(db, DbTable.T_TEST.Name)  
+tbl.Field[DbTable.T_TEST.TEXTDATA.Name] = db.AddInsertParameter(DbTable.T_TEST.TEXTDATA.Name, "テスト");  
 
-db.Execute($@"
-        insert into {DbTable.T_TEST.Name}
-                ({tbl.InsertIntoSQL})
-        values 
-                ({tbl.InsertSelectSQL}) 
-    ");
-⇒insert into T_TEST(TEXTDATA) values(@1)  @1の内容は　"テスト" のsql文を実行
+db.Execute($@"  
+        insert into {DbTable.T_TEST.Name}  
+                ({tbl.InsertIntoSQL})  
+        values   
+                ({tbl.InsertSelectSQL})   
+    ");  
+⇒insert into T_TEST(TEXTDATA) values(@1)  @1の内容は　"テスト" のsql文を実行  
 
 
 ### DemoRun
