@@ -26,7 +26,7 @@ Datatable dt = db.GetDataTable($@"
     ");
 
 ※①の場所がパラメータ化(テスト用番号=@1)されます。  
-⇒ >= <= などの記述も可能です。  
+⇒ >= <= like などの記述も可能です。  
 
 ◇通常のSQL(IN句)　　AddWhereParameter の場所で　テスト用番号 in (xx,yy) のデータが作成
 
@@ -40,6 +40,21 @@ Datatable dt = db.GetDataTable($@"
             {db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, lst)}           
     ");
 
+◇insertのSQL
+
+//テーブルの定義を開く
+var tbl = new TableHelper(db, DbTable.T_TEST.Name)
+tbl.Field[DbTable.T_TEST.TEXTDATA.Name] = db.AddInsertParameter(DbTable.T_TEST.TEXTDATA.Name, "テスト");
+
+db.Execute($@"
+        insert into {DbTable.T_TEST.Name}
+                ({tbl.InsertIntoSQL})
+        values 
+                ({tbl.InsertSelectSQL}) 
+    ");
+⇒insert into T_TEST(TEXTDATA) values(@1)  @1の内容は　"テスト" のsql文を実行
+
+
 ### DemoRun
 SQLServerにDB（任意）を作成  
 [SQL](SQL.txt)　を実行  
@@ -49,7 +64,8 @@ CommonData.cs　内
 db.ConnectionString = @"～";  
 
 その後  
-SampleAndTestプロジェクトで　メニュー　テスト-実行(or デバッグ)-全てのテスト　で実行可能です。
+SampleAndTestプロジェクトで　メニュー　テスト-実行(or デバッグ)を　[Fact(DisplayName  の順番で実行してください。
+⇒順番で実行する方法は確認中
 
 ※SampleAndTestプロジェクト内に色々なサンプルがあります。
 

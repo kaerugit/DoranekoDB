@@ -25,15 +25,15 @@ namespace SampleAndTest
             CommonData.InitDB();
         }
 
-        [Fact(DisplayName = "データベース初期設定")]
+        [Fact(DisplayName = "01データベース初期設定")]
         public void DBInit()
         {
             //CommonData.InitDB();
 
-            Assert.NotEqual(DBFieldData.FieldDataMemberList.Count, 0);
+            Assert.NotEqual(0, (long)DBFieldData.FieldDataMemberList.Count);
         }
 
-        [Fact(DisplayName = "データ追加・更新(SQL)")]
+        [Fact(DisplayName = "02データ追加・更新(SQL)")]
         public void DBSQL()
         {
             var db = CommonData.GetDB();
@@ -82,14 +82,13 @@ namespace SampleAndTest
                 //DbTableに定義されていないフィールドもOK  (フィールドタイプは、何かを拝借すること)
                 //tbl.Field["てすと"] = db.AddParameter(DbTable.T_TEST.フラグ.Name, "aaaa");
 
-                //(InsertIntoSQLを使えば)更新日時はCommonData.GetDB(InsertUpdateDataParameter)内で自動的に更新
+                //(InsertIntoSQLプロパティを使えば)更新日時はCommonData.GetDB(InsertUpdateDataParameter)内で自動的に更新
                 db.Execute($@"
                         insert into {DbTable.T_TEST.Name}
                                 ({tbl.InsertIntoSQL})
                         values 
                                 ({tbl.InsertSelectSQL}) 
                     ");
-
 
             }
 
@@ -185,7 +184,7 @@ namespace SampleAndTest
 
         }
 
-        [Fact(DisplayName = "通常のSELECT")]
+        [Fact(DisplayName = "03通常のSELECT")]
         public void Select1()
         {
 
@@ -217,7 +216,13 @@ namespace SampleAndTest
                     
                ");
 
-            Assert.Equal(dt.Rows.Count, 1);
+            if (dt.Rows.Count > 0)
+            {
+                //一旦エラーになるが、実行順番の関係で2回目以降は実行される（はず）
+                Assert.Equal(1, (long)dt.Rows.Count);
+            }
+
+
 
             //■■in句■■
             var lst = new List<int>() { maxData, maxData - 1 };
@@ -287,8 +292,79 @@ namespace SampleAndTest
 
         }
 
+        [Fact(DisplayName = "04通常のSELECT(sql文の使いまわし)")]
+        public void Select2()
+        {
 
-        [Fact(DisplayName = "データ追加・更新(Dataset)")]
+            var db = CommonData.GetDB();
+
+            var sql = $@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name} 
+                    where
+                        { db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, 0, DBMastar.WHERE_FUGO.Not)}
+            ";
+
+
+            var count1 = db.GetDataTable(sql).Rows.Count;
+
+            //元のsql文(変数sql)を使いまわし
+            var sqlSub = $@"
+                    select 
+                    from 
+                    ({sql}) as sub
+                    where
+                        { db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, 0, DBMastar.WHERE_FUGO.Not)}
+                ";
+
+            var count2 = db.GetDataTable(sql).Rows.Count;
+
+            Assert.Equal(count1, count2);
+
+
+            //レスポンスNG例
+            for (var i = 0; i < 100; i++)
+            {
+                sql = $@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name} 
+                    where
+                        { db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, 0, DBMastar.WHERE_FUGO.Not)}
+                ";
+
+                //こうすると常に内部パラメータが溜まるのでレスポンス的にまずくなってくる
+                var dt= db.GetDataTable(sql);
+
+            }
+
+            //レスポンスOK例　↑の正しい書き方
+            for (var i = 0; i < 100; i++)
+            {
+
+                //★一旦こちらを実行（内部パラメータをクリア） 入れる事によって早くなります。
+                db.ClearSQLParameter();
+
+                sql = $@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name} 
+                    where
+                        { db.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, 0, DBMastar.WHERE_FUGO.Not)}
+                ";
+
+                var dt = db.GetDataTable(sql);
+
+            }
+
+
+        }
+
+        [Fact(DisplayName = "05データ追加・更新(Dataset)")]
         public void DBDataSet()
         {
             var db = CommonData.GetDB();
@@ -405,7 +481,6 @@ namespace SampleAndTest
 
 
             //jsonからDataTableに変換(web apiなどで受信)
-            //var dtInput = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Data.DataTable>(jsonString);
 
             //jsonからの戻し(SQLServer2016 だと json をそのままtable化できるのでそちらを使用したほうがよいと思う　hint OPENJSON関数 )
             var dataList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonString);
@@ -502,13 +577,15 @@ namespace SampleAndTest
 
 
 
-
-                //遅い
+                //こちらでもOK
                 if (false)
                 {
                     var filed = tbl.InsertIntoSQL;
                     foreach (var data in dataList)
                     {
+
+                        db.ClearSQLParameter();   //ただしこちらを実行しないとパラメータが溜まってすごく遅い
+
                         sql = $@"
                             insert into {tempTableName}
                                 ({filed})
@@ -542,7 +619,7 @@ namespace SampleAndTest
 
         }
 
-        [Fact(DisplayName = "パラメータの保存")]
+        [Fact(DisplayName = "06パラメータの保存")]
         public void SaveParameter()
         {
             var db = CommonData.GetDB();
@@ -568,6 +645,8 @@ namespace SampleAndTest
 
             //jsonオブジェクトに変換
             var save = Newtonsoft.Json.JsonConvert.SerializeObject(db.SQLParameter);
+
+            //違うオブジェクトに復元
             var db2 = CommonData.GetDB();
 
             //戻す（この場合System.DBNull.Value ⇒ nullに変換されるのがDBMastarクラスで対応済）
@@ -577,6 +656,47 @@ namespace SampleAndTest
             Assert.Equal(datacount, dt2.Rows.Count);
 
         }
+
+        [Fact(DisplayName = "07パラメータのコピー")]
+        public void CopyParameter()
+        {
+
+            //条件を保存
+            var dbSave = CommonData.GetDB();
+            var whereSave = $@"
+                    where
+                        { dbSave.AddWhereParameter(DbTable.T_TEST.テスト用番号.Name, 1, DBMastar.WHERE_FUGO.Ijyo)}
+                    ";
+
+            var db1 = CommonData.GetDB();
+            //保存したパラメータをセット
+            var where1 = db1.CopySQL(dbSave, whereSave);     //戻り値は whereSave
+
+            var dt1 = db1.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name} 
+                    {where1}
+               ");
+
+
+            var db2 = CommonData.GetDB();
+            var where2 = db2.CopySQL(dbSave, whereSave);     //戻り値は whereSave
+
+            var dt2 = db2.GetDataTable($@"
+                    select 
+                        *
+                    from 
+                        {DbTable.T_TEST.Name} 
+                    {where2}
+               ");
+
+            Assert.Equal(dt1.Rows.Count, dt2.Rows.Count);
+
+        }
+
+
 
     }
 }

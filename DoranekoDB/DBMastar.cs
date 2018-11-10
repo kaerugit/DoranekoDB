@@ -665,6 +665,16 @@ namespace DoranekoDB
             }
         }
 
+        /// <summary>
+        /// パラメータのクリア
+        /// </summary>
+        /// <remarks>
+        /// SQL文を連続して実行する場合は頻繁にこちらのメソッドを実行してください
+        /// ⇒実行しない場合は、パラメータがどんどん溜まっていきますのでよろしくないです。
+        /// 
+        /// ClearSQLParameter後もパラメータを保持したい場合は
+        /// CopySQLメソッドを利用
+        /// </remarks>
         public void ClearSQLParameter()
         {
             this.SQLParameter.Clear();
@@ -674,31 +684,27 @@ namespace DoranekoDB
         /// <summary>
         /// パラメータ付でSQL文をコピー
         /// </summary>
-        /// <param name="copyidb">コピーするデータベースオブジェクト</param>
+        /// <param name="copydb">コピーするデータベースオブジェクト</param>
         /// <param name="sql">SQL文</param>
         ///<remarks>
-        /// dim idb As DBMastar = CommonData.GetDB()
-        /// dim idbWhere As DBMastar = CommonData.GetDB()
-        /// dim where as string = _
-        ///     " where " & _
-        ///         idbWhere.AddWhereParameter
-        ///
-        /// idbWhere→idb　にコピー
-        /// dim sql as string = _
-        ///     idb.CopySQL(idbWhere,where)     '戻り値は where
-        ///
+        /// var dbSave = CommonData.GetDB();
+        /// var where =
+        ///     " where " +
+        ///         dbSave.AddWhereParameter(～
+        /// dbSave→db　にコピー
+        /// var db = CommonData.GetDB();
+        /// var sql = db.CopySQL(dbSave, where)     //戻り値は where
         /// </remarks>
-        /// <returns></returns>
-        public string CopySQL(DBMastar copyidb, string sql)
+        public string CopySQL(DBMastar copydb, string sql)
         {
-            foreach (string eachKey in copyidb.SQLParameter.Keys)
+            foreach (string eachKey in copydb.SQLParameter.Keys)
             {
                 //パラメータの値がダブってはいけないので違う番号を付与
                 DBUseParameter para;
-                para.FieldName = copyidb.SQLParameter[eachKey].FieldName;
+                para.FieldName = copydb.SQLParameter[eachKey].FieldName;
                 para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "c";
-                para.DbType = copyidb.SQLParameter[eachKey].DbType;
-                para.Value = copyidb.SQLParameter[eachKey].Value;
+                para.DbType = copydb.SQLParameter[eachKey].DbType;
+                para.Value = copydb.SQLParameter[eachKey].Value;
 
                 //元のSQL文のパラメータを新しいパラメータに置換
                 if (sql.Contains(eachKey))
@@ -869,8 +875,8 @@ namespace DoranekoDB
             }
 
 
-                //該当するキーが存在するかどうか(基本的にはパラメータは残りっぱなしなので, 著しく速度が低下する場合は、ClearParameterすることをお勧めします)
-                if (this.SQLParameter.Keys.Count > 0)
+            //該当するキーが存在するかどうか(基本的にはパラメータは残りっぱなしなので, 著しく速度が低下する場合は、ClearSQLParameterすることをお勧めします)
+            if (this.SQLParameter.Keys.Count > 0)
             {
                 foreach (string eachKey in this.SQLParameter.Keys)
                 {
