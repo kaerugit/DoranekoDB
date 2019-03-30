@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 public class SQLHelper
 {
-    public static string GetMargeSQL(DBMastar db, string tableName,string insertSelect)
+    public static string GetMergeSQL(DBMastar db, string tableName,string insertSelect)
     {
         var sql = "";
         var tbl = new TableHelper(db, tableName, TableHelper.FIELD_GET_TYPE.FieldAndTable);

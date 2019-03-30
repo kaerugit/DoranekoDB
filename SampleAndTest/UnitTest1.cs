@@ -606,8 +606,8 @@ namespace SampleAndTest
 
             //çXêV
             db.BeginTransaction();
-            var margeSql = SQLHelper.GetMargeSQL(db, DbTable.T_TEST.Name, $" select * from {tempTableName}");
-            db.Execute(margeSql);
+            var mergeSql = SQLHelper.GetMergeSQL(db, DbTable.T_TEST.Name, $" select * from {tempTableName}");
+            db.Execute(mergeSql);
             try
             {
                 db.Commit();

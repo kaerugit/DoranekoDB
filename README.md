@@ -102,10 +102,6 @@ CommonDataInfo.cs(vb)が作成されるので
 こちらのファイルを移動して利用してください。
 
 ## License
-DoranekoDBプロジェクト  
-[LGPL3.0](LICENSE.txt)
-
-他プロジェクト  
 [MIT](LICENSEMIT.txt)
 
 ## Future Releases
