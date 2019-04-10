@@ -96,13 +96,16 @@ namespace TemplateHelper
             string nameModule = "public const string Name = \"{0}\";";
             string primaryKeyModule = "public const string PrimaryKey = \"{0}\";";
             string fullNameModule = "public const string FullName = \"{0}\";";
-            string commentModule = "/// <summary>{0}</summary>" + kaigyo +
+            string commentModule = "/// <summary>{0}</summary>" + kaigyo;
+            
+           string commentModuleRemarks =
                         "/// <remarks>" + kaigyo +
-                        "{1}" +
+                        "{0}" +
                         "/// </remarks>" + kaigyo;
 
 
-            if  (lt == LANG_TYPE.VB) { 
+
+            if (lt == LANG_TYPE.VB) { 
                  publicClassStart = "Public Class DbTable";
                  publicClassEnd = "End Class";
                  classStart = "Class {0}";
@@ -111,9 +114,11 @@ namespace TemplateHelper
                  nameModule = "Public Const Name As String = \"{0}\"";
                  primaryKeyModule = "Public Const PrimaryKey As String = \"{0}\"";
                  fullNameModule = "Public Const FullName As String = \"{0}\"";
-                 commentModule = "\'\'\' <summary>{0}</summary>"+ kaigyo + 
+                commentModule = "\'\'\' <summary>{0}</summary>" + kaigyo;
+
+                commentModuleRemarks =
                             "\'\'\' <remarks>" + kaigyo + 
-                            "{1}" + 
+                            "{0}" + 
                             "\'\'\' </remarks>" + kaigyo;
             }
             string comment = commentModule.Substring(0, 3);
@@ -160,13 +165,20 @@ namespace TemplateHelper
                 {
                     if ((string.IsNullOrEmpty(drSelect[0]["TABLE_DESCRIPTION"].ToString()) == false))
                     {
-                        description = drSelect[0]["TABLE_DESCRIPTION"].ToString();
-                        description = (comment + description.Replace(kaigyo, (kaigyo + comment)));
-                        if ((description.EndsWith(kaigyo) == false))
-                        {
-                            description += kaigyo;
-                        }
 
+                        description = drSelect[0]["TABLE_DESCRIPTION"].ToString();
+                        //同じ場合は無視する
+                        if (logicalname == description)
+                        {
+                            description = "";
+                        }
+                        else { 
+                            description = (comment + description.Replace(kaigyo, (kaigyo + comment)));
+                            if (description.EndsWith(kaigyo) == false)
+                            {
+                                description += kaigyo;
+                            }
+                        }
                     }
 
                 }
@@ -219,17 +231,31 @@ namespace TemplateHelper
                         if ((string.IsNullOrEmpty(dr["COLUMN_DESCRIPTION"].ToString()) == false))
                         {
                             description = dr["COLUMN_DESCRIPTION"].ToString();
-                            description = comment + description.Replace(kaigyo, kaigyo + comment);
-                            if ((description.EndsWith(kaigyo) == false))
+                            //同じ場合は無視する
+                            if (logicalname == description)
                             {
-                                description += kaigyo;
+                                description = "";
+                            }
+                            else
+                            {
+                                description = comment + description.Replace(kaigyo, kaigyo + comment);
+                                if (description.EndsWith(kaigyo) == false)
+                                {
+                                    description += kaigyo;
+                                }
                             }
 
                         }
 
                     }
 
-                    xmlComment = string.Format(commentModule, logicalname, description);
+                    xmlComment = string.Format(commentModule, logicalname);
+
+                    if (string.IsNullOrEmpty(description) == false)
+                    {
+                        xmlComment += string.Format(commentModuleRemarks, description);
+                    }
+                    
 
                     sb.Append(xmlComment.Replace(comment, tab + tab + comment));    //コメント
 

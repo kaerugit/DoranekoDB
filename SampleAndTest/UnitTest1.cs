@@ -188,6 +188,8 @@ namespace SampleAndTest
         public void Select1()
         {
 
+            //※01から順番で実行しないとエラーになるので注意
+
             var db = CommonData.GetDB();
 
 
@@ -263,7 +265,7 @@ namespace SampleAndTest
                     
                ");
 
-            Assert.Equal(dt.Rows.Count, 1);
+            Assert.Equal(1, dt.Rows.Count);
 
 
             //■■Likeのテスト■■

@@ -64,7 +64,7 @@ namespace DoranekoDB
             sb.Append("SELECT ");
             sb.Append("    TABLE_NAME ");
             sb.Append("  , CAST(CASE WHEN CHARINDEX(CHAR(13) + CHAR(10),TABLE_DESCRIPTION) = 0 THEN ");
-            sb.Append("       TABLE_NAME ");
+            sb.Append("       ISNULL(TABLE_DESCRIPTION,TABLE_NAME) ");
             sb.Append("    ELSE ");
             sb.Append("       REPLACE( ");
             sb.Append("         REPLACE( ");
@@ -86,7 +86,7 @@ namespace DoranekoDB
             sb.Append("    ELSE '(' + DATA_SIZE + ')' ");
             sb.Append("    END AS DATA_TYPE ");
             sb.Append("  , CAST(CASE WHEN CHARINDEX(CHAR(13) + CHAR(10),COLUMN_DESCRIPTION) = 0 THEN ");
-            sb.Append("       COLUMN_NAME ");
+            sb.Append("       ISNULL(COLUMN_DESCRIPTION,COLUMN_NAME) ");
             sb.Append("    ELSE ");
             sb.Append("       REPLACE( ");
             sb.Append("         REPLACE( ");
@@ -180,8 +180,6 @@ namespace DoranekoDB
             sb.Append("        AND [FEP].NAME = 'MS_Description' ");
             sb.Append("    WHERE ");
             sb.Append("      1 = 1 ");
-            sb.Append("      /* AND [COL].TABLE_NAME = '' */ ");
-            sb.Append("      /* AND [COL].COLUMN_NAME LIKE '%Kingaku%' */ ");
             sb.Append("  ) AS SUB ");
 
             sb.Append("ORDER BY ");

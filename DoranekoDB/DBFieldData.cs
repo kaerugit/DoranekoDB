@@ -18,19 +18,22 @@ namespace DoranekoDB
 
         public struct FieldData
         {
-            /// <summary>null可能の場合：true</summary>
-            public bool IsNullable;
+            //主キーと連結している場合Nullableがtrue、falseと発生する可能性があるので削除
+            ///// <summary>null可能の場合：true</summary>
+            //public bool IsNullable;
+
             /// <summary>フィールドタイプ</summary>
             public DbType DbType;
+
             /// <summary>サイズ</summary>
-
             public int Size;
+
             /// <summary>最大値</summary>
-
             public decimal MaxValue;
-            /// <summary>最小値</summary>
 
+            /// <summary>最小値</summary>
             public decimal MinValue;
+
             /// <summary>デフォルト値</summary>
             public string DefaultValue;
 
@@ -74,7 +77,9 @@ namespace DoranekoDB
         public string IS_AUTO_NUMBER { get; set; }
         public string COLUMN_NAME { get; set; }
         public string DATA_TYPE { get; set; }
-        public string IS_NULLABLE { get; set; }
+
+        //public string IS_NULLABLE { get; set; }
+
         public string COLUMN_DEFAULT { get; set; }
         public string IS_IGNORE_FIELD { get; set; }
     }

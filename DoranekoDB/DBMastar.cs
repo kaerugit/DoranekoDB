@@ -393,7 +393,7 @@ namespace DoranekoDB
             paraDbType = fieldMember.DbType;
 
             fieldMember.DefaultValue = "";
-            fieldMember.IsNullable = false;
+            //fieldMember.IsNullable = false;
             fieldMember.MaxValue = 0;
             fieldMember.MinValue = 0;
             fieldMember.Size = 0;
@@ -591,12 +591,12 @@ namespace DoranekoDB
                     }
 
                 }
-                else if (((dataLength > 0)
+                else if ((dataLength > 0)
                             && ((fieldMember.MinValue != 0)
-                            || (fieldMember.MaxValue != 0))))
+                            || (fieldMember.MaxValue != 0)))
                 {
-                    if (((fieldMember.MinValue > Decimal.Parse(data.ToString()))
-                                || (fieldMember.MaxValue < Decimal.Parse(data.ToString()))))
+                    if ((fieldMember.MinValue > Decimal.Parse(data.ToString()))
+                                || (fieldMember.MaxValue < Decimal.Parse(data.ToString())))
                     {
                         data = System.DBNull.Value;
                     }
@@ -646,14 +646,14 @@ namespace DoranekoDB
                 fd.MinValue = minValue;
                 fd.DefaultValue = fm.COLUMN_DEFAULT;
 
-                if (fm.IS_NULLABLE.Equals(DBMastar.DBTrueValue.ToString()))
-                {
-                    fd.IsNullable = true;
-                }
-                else
-                {
-                    fd.IsNullable = false;
-                }
+                //if (fm.IS_NULLABLE.Equals(DBMastar.DBTrueValue.ToString()))
+                //{
+                //    fd.IsNullable = true;
+                //}
+                //else
+                //{
+                //    fd.IsNullable = false;
+                //}
 
                 DBFieldData.FieldMember.AddOrUpdate(fm.COLUMN_NAME, fd,
                                                     (string paraColumnName, DBFieldData.FieldData parafd) =>
