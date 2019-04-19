@@ -219,16 +219,7 @@ namespace DoranekoDB
                     db.InsertUpdateDataParameter.Invoke(DBFieldData.SQL_UPDATE_TYPE.INSERT, db.IsTransaction, this.ColumnList, this.Field);
                 }
 
-                string fieldName = "";
-                foreach (string eachKey in this.Field.Keys)
-                {
-                    fieldName += "," + eachKey;
-                }
-
-                if ((fieldName.Equals("") == false))
-                {
-                    fieldName = fieldName.Substring(1);
-                }
+                string fieldName = string.Join(",", this.Field.Keys);
 
                 return fieldName;
             }
@@ -261,20 +252,16 @@ namespace DoranekoDB
 
         private string getSelectSQL(bool fieldAppendflag)
         {
-            string fieldName = "";
-            foreach (string eachKey in this.Field.Keys)
-            {
-                fieldName += "," + this.Field[eachKey];
-                if (fieldAppendflag)
-                {
-                    fieldName += " as " + eachKey;
-                }
-            }
-
-            if ((fieldName.Equals("") == false))
-            {
-                fieldName = fieldName.Substring(1);
-            }
+            string fieldName = 
+                string.Join(",",
+                    this.Field.Keys.Select(paraKey => {
+                        if (fieldAppendflag)
+                        {
+                            return this.Field[paraKey] + " as " + paraKey;
+                        }
+                        return this.Field[paraKey];
+                    })
+               );
 
             return fieldName;
         }
@@ -291,17 +278,12 @@ namespace DoranekoDB
                     db.InsertUpdateDataParameter.Invoke(DBFieldData.SQL_UPDATE_TYPE.UPDATE, db.IsTransaction, this.ColumnList, this.Field);
                 }
 
-                string fieldName = "";
-                foreach (string eachKey in this.Field.Keys)
-                {
-                    fieldName += "," + eachKey + "=" + this.Field[eachKey];
-
-                }
-
-                if (fieldName.Equals("") == false)
-                {
-                    fieldName = fieldName.Substring(1);
-                }
+                string fieldName =
+                    string.Join(",",
+                        this.Field.Keys.Select(paraKey => {
+                            return paraKey + "=" + this.Field[paraKey];
+                        })
+                   );
 
                 return fieldName;
             }

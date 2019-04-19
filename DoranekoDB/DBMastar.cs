@@ -32,6 +32,17 @@ namespace DoranekoDB
         /// <remarks>一時テーブルを永続的に使用する場合などはfalseにしてください。</remarks>
         public bool ConnectionAutoClose = true;
 
+        /// <summary>値をチェックする場合：true</summary>
+        /// <remarks>
+        /// 確実に正しい値が入っている場合にfalseにすると値の変換(function changeValue　内)を行わない
+        /// ⇒レスポンスアップさせたいとき使用
+        /// </remarks>
+        public bool IsDataCheck = true;
+
+        /// <summary>InsertUpdateDataDataRow 後にキャンセルしたい場合：true</summary>
+        /// <remarks>本来はInsertUpdateDataDataRowの引数に入れたかったが、outが絡むとややこしいので却下</remarks>
+        public bool IsInsertUpdateCancel = false;
+
         /// <summary>トランザクションのレベル</summary>
         public IsolationLevel? TransactionIsolationLevel { get; set; } = null;
 
@@ -43,13 +54,30 @@ namespace DoranekoDB
         ///  </remarks>
         public static string DummyWhereString { get; set; } = " 111=222 ";
 
-        /// <summary>データ更新時に共通した項目に値をセット(DataSet版)</summary>
+
+        /// <summary></summary>
         /// <remarks>
         /// 更新日時などをセットしたい場合に使用
-        /// 引数：左から　SQL_UPDATE_TYPE、トランザクション中の場合：true、該当レコードのDatarow、フィールド名、値
+        /// 引数：左から　SQL_UPDATE_TYPE、トランザクション中の場合：true、変換エラーの場合：true、該当レコードのDatarow、フィールド名、値
         /// 戻り値：セットしたい値
         /// </remarks>
-        public Func<DBFieldData.SQL_UPDATE_TYPE, Boolean, DataRow, String, Object, Object> InsertUpdateDataDataRow { get; set; } = null;
+        public Func<DBFieldData.SQL_UPDATE_TYPE, Boolean,  Boolean, DataRow, String, Object, Object> InsertUpdateDataDataRow { get; set; } = null;
+
+
+        ///// <summary>
+        ///// データ更新時に共通した項目に値をセット(DataSet版)
+        ///// </summary>
+        ///// <param name="paraSqlUpdateType">SQL_UPDATE_TYPE</param>
+        ///// <param name="paraIsTransaction">トランザクション中の場合：true</param>
+        ///// <param name="paraIsError">変換エラーの場合：true</param>
+        ///// <param name="paraDr">該当レコードのDatarow</param>
+        ///// <param name="paraFileName">フィールド名</param>
+        ///// <param name="paraData">値</param>
+        ///// <param name="paraCancelFlag">処理をキャンセルする場合：trueをセット</param>
+        ///// <returns></returns>
+        //public delegate Object InsertUpdateDataDataRowdelegate(DBFieldData.SQL_UPDATE_TYPE paraSqlUpdateType, Boolean paraIsTransaction, Boolean paraIsError, DataRow paraDr, String paraFileName, Object paraData ,out bool paraCancelFlag);
+        //public InsertUpdateDataDataRowdelegate InsertUpdateDataDataRow { get; set; } = null;
+
 
         /// <summary>データ更新時に共通した項目に値をセット(SQL版)</summary>
         /// <remarks>
@@ -290,6 +318,7 @@ namespace DoranekoDB
                 {
                     eachPara = (int)eachPara;
                 }
+
                 if (changeValue(sqlUpdateType, null, fileName, ref eachPara, out para.DbType, false))
                 {
                     dummyWhereFlag = true;
@@ -375,7 +404,7 @@ namespace DoranekoDB
 
         private bool changeValue(DBFieldData.SQL_UPDATE_TYPE sqlUpdateType, DataRow dr, string paraFileName, ref object data, out DbType paraDbType, bool noFieldExitFlag)
         {
-            // 検索時にALLOK(1=1)の条件を戻す場合：true
+            // 検索時に DummyWhereString の条件を戻す場合：true
             bool dummyWhereFlag = false;
             string fileName = paraFileName;
             int index = fileName.LastIndexOf(".");
@@ -419,7 +448,7 @@ namespace DoranekoDB
                 else
                 {
                     // データセットからのアップデートについてはFieldMemberに存在しないものは、チェックを無視する
-                    if ((noFieldExitFlag == true))
+                    if (noFieldExitFlag == true)
                     {
                         return dummyWhereFlag;
                     }
@@ -433,14 +462,18 @@ namespace DoranekoDB
 
             }
 
-            if ((findFlag == true))
+            if (findFlag == true)
             {
                 fieldMember = DBFieldData.FieldMember[fileName];
             }
             paraDbType = fieldMember.DbType;
 
-            DbType pDbType = fieldMember.DbType;
-            if ((pDbType == DbType.Boolean))
+            if (this.IsDataCheck == false)
+            {
+                return dummyWhereFlag;
+            }
+
+            if ((paraDbType == DbType.Boolean))
             {
                 // booleanは ture falseを変更
                 bool outValue;
@@ -476,7 +509,7 @@ namespace DoranekoDB
                 // 空文字列の場合はnullをセット(以下のElseif はnull判定なしとする)
                 data = System.DBNull.Value;
             }
-            else if (pDbType == DbType.Date || pDbType == DbType.DateTime || pDbType == DbType.DateTime2) //日付系
+            else if (paraDbType == DbType.Date || paraDbType == DbType.DateTime || paraDbType == DbType.DateTime2) //日付系
             {
                 // DBパラメータが日付型で、値が日付でない場合に日付型に変更
                 DateTime outDate;
@@ -495,7 +528,7 @@ namespace DoranekoDB
                 }
 
             }
-            else if ((pDbType == DbType.Int16))
+            else if ((paraDbType == DbType.Int16))
             {
                 Int16 outValue;
                 if (Int16.TryParse(data.ToString(), out outValue))
@@ -509,7 +542,7 @@ namespace DoranekoDB
                 }
 
             }
-            else if ((pDbType == DbType.Int32))
+            else if ((paraDbType == DbType.Int32))
             {
                 Int32 outValue;
                 if (Int32.TryParse(data.ToString(), out outValue))
@@ -523,7 +556,7 @@ namespace DoranekoDB
                 }
 
             }
-            else if ((pDbType == DbType.Int64))
+            else if ((paraDbType == DbType.Int64))
             {
                 Int64 outValue;
                 if (Int64.TryParse(data.ToString(), out outValue))
@@ -537,7 +570,7 @@ namespace DoranekoDB
                 }
 
             }
-            else if (pDbType == DbType.Currency || (pDbType == DbType.Decimal))
+            else if (paraDbType == DbType.Currency || (paraDbType == DbType.Decimal))
             {
                 Decimal outValue;
                 if (Decimal.TryParse(data.ToString(), out outValue))
@@ -551,7 +584,7 @@ namespace DoranekoDB
                 }
 
             }
-            else if ((pDbType == DbType.Double))
+            else if ((paraDbType == DbType.Double))
             {
                 double outValue;
                 if (double.TryParse(data.ToString(), out outValue))
@@ -565,7 +598,7 @@ namespace DoranekoDB
                 }
 
             }
-            else if (pDbType == DbType.Binary)
+            else if (paraDbType == DbType.Binary)
             {
                 //バイナリはバイト列かどうかチェック
                 //if (data.GetType() != typeof(Byte[]))
@@ -588,6 +621,7 @@ namespace DoranekoDB
                     if ((dataLength > fieldMember.Size))
                     {
                         data = data.ToString().Substring(0, fieldMember.Size); //セットできるところまでのデータを挿入
+                        dummyWhereFlag = true;
                     }
 
                 }
@@ -599,6 +633,7 @@ namespace DoranekoDB
                                 || (fieldMember.MaxValue < Decimal.Parse(data.ToString())))
                     {
                         data = System.DBNull.Value;
+                        dummyWhereFlag = true;
                     }
 
                 }
@@ -612,14 +647,6 @@ namespace DoranekoDB
                     }
 
                 }
-
-                //共通項目の更新
-                if (InsertUpdateDataDataRow != null && dr != null)
-                {
-
-                    data = InsertUpdateDataDataRow.Invoke(sqlUpdateType, this.IsTransaction, dr, fileName, data);
-                }
-
             }
 
             return dummyWhereFlag;
@@ -803,10 +830,11 @@ namespace DoranekoDB
         ///DataSetのUpdate
         ///</summary>
         ///<param name="tableName">一部のテーブルのみアップデートしたい場合はtableNameをセット（デフォルトはDataSet内の全テーブルをアップデート）</param>
+        ///<param name="updateFlag">DataTableのチェックのみ(DBへのアップデートなしの場合):false</param>
         ///<remarks>
         ///tableNameを指定しない場合は、DataSetを一旦Clearします。
         ///</remarks>
-        public void UpdateDataSet(string tableName = "")
+        public void UpdateDataSet(string tableName = "",bool updateFlag = true )
         {
             foreach (DataTable dt in this.DataSet.Tables)
             {
@@ -838,8 +866,22 @@ namespace DoranekoDB
                         {
                             DataColumn col = dt.Columns[i];
                             object data = dr[i];
+                            
                             DbType outDbType;
-                            changeValue(sqlUpdateType.Value, dr, col.ColumnName, ref data, out outDbType, true);
+                            var errorFlag = changeValue(sqlUpdateType.Value, dr, col.ColumnName, ref data, out outDbType, true);
+
+                            //共通項目の更新
+                            if (InsertUpdateDataDataRow != null)
+                            {
+                                this.IsInsertUpdateCancel = false; 
+                                data = InsertUpdateDataDataRow.Invoke(sqlUpdateType.Value, this.IsTransaction, errorFlag, dr, col.ColumnName, data);
+                                //キャンセルの場合は処理中止
+                                if (this.IsInsertUpdateCancel == true)
+                                {
+                                    return;
+                                }
+                            }
+
                             dr[i] = data;
                         }
 
@@ -847,8 +889,13 @@ namespace DoranekoDB
 
                 }
 
-                //一時テーブルなどエラーが出る場合は　ConnectionAutoClose　プロパティを見直せばよいかもしれません。
-                this.adapter.Update(dt);
+                
+                if (updateFlag)
+                {
+                    //一時テーブルなどエラーが出る場合は　ConnectionAutoClose　プロパティをfalseにする事
+                    this.adapter.Update(dt);
+                }
+                
             }
 
             if ((string.IsNullOrEmpty(tableName) == true))

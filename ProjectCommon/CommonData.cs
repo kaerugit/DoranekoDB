@@ -79,11 +79,20 @@ public class CommonData
         DateTime nowTime = DateTime.Now;
 
         //決まった項目の値をセット(DataRow版)　　★意味不明な場合はコメント推奨
-        db.InsertUpdateDataDataRow = (paraSqlUpdateType, paraIsTransaction, paraDr, paraFileName, paraData) =>
+        db.InsertUpdateDataDataRow = (paraSqlUpdateType, paraIsTransaction, paraIsError　, paraDr, paraFileName, paraData ) =>
             {
                 if (paraIsTransaction)  //トランザクション中の場合
                 {
                 }
+
+                //csvなどのデータをDatatableにセットした後、型のチェックのみしたい場合などに使用(db.UpdateDataSet の　引数：updateFlag と共に使用)
+                if (paraIsError)  //値変換エラー発生した場合
+                {
+
+                    //更新を中止させる事も可(DBへの登録を行わない)
+                    //db.IsInsertUpdateCancel = true;
+                }
+
 
                 //if (paraSqlUpdateType == DBFieldData.SQL_UPDATE_TYPE.INSERT)
 

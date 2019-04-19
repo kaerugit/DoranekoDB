@@ -42,10 +42,12 @@ namespace DoranekoDB
         /// <summary>メモリ上のデータベースの情報</summary>
         public static System.Collections.Concurrent.ConcurrentDictionary<string, FieldData> FieldMember = new System.Collections.Concurrent.ConcurrentDictionary<string, FieldData>();
 
-        //public static DataTable FieldDataMember;
+
         /// <summary>メモリ上のデータベースの情報（全て）</summary>
         /// <remarks>初期に必ずセットしてください</remarks>
         public static List<FieldDataMember> FieldDataMemberList;
+        //System.Collections.Generic.List → System.Collections.Concurrent.ConcurrentBag(スレッドセーフ)
+
 
         /// <summary>
         /// TEMPTable(一時)作成時のテンプレートSQL
