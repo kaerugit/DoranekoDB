@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DoranekoDB
 {
@@ -127,7 +128,7 @@ namespace DoranekoDB
         protected abstract DbParameter GetParameter();
         protected abstract DbCommand GetCommand();
         protected abstract DbDataAdapter GetDataAdapter();
-        protected abstract DbCommandBuilder GetCommandBuilder(DbDataAdapter dda);
+        protected abstract DbCommandBuilder GetCommandBuilder();
         public abstract void GetSqlTypeToDbType(string sqlTypeString, out DbType pdbType, out int size, out decimal maxValue, out decimal minValue);
 
         /// <summary>
@@ -142,6 +143,7 @@ namespace DoranekoDB
         public DBSQLParameter SQLParameter = new DBSQLParameter();
         //public Dictionary<String, DBUseParameter> ParameterDictionary { get; set; } = new Dictionary<String, DBUseParameter>();
         private DbDataAdapter adapter;
+
 
         /// <summary>コネクションのopen</summary>
         /// <remarks>基本的には必要なし、Connection　プロパティを直接参照したい場合に使用して下さい</remarks>
@@ -159,6 +161,7 @@ namespace DoranekoDB
 
             if (this.Connection.State == ConnectionState.Closed)
             {
+                this.Connection.ConnectionString = this.ConnectionString;
                 this.Connection.Open();
             }
         }
@@ -329,6 +332,8 @@ namespace DoranekoDB
 
                 lastData = eachPara;
                 this.SQLParameter.Add(para.ParameterName, para);
+
+
                 // 2件目以降(in句の場合カンマを追加)
                 if ((string.IsNullOrEmpty(parameterString) == false))
                 {
@@ -711,6 +716,7 @@ namespace DoranekoDB
         public void ClearSQLParameter()
         {
             this.SQLParameter.Clear();
+
         }
 
 
@@ -797,7 +803,8 @@ namespace DoranekoDB
         {
             this.adapter = this.GetDataAdapter();
             this.adapter.SelectCommand = getSQLCommand(sql);
-            DbCommandBuilder cb = this.GetCommandBuilder(this.adapter);
+            DbCommandBuilder cb = this.GetCommandBuilder();
+            cb.DataAdapter = this.adapter;
             cb.GetInsertCommand();
 
             //主キーのないものはエラーになるが、エラーを無視する
@@ -931,12 +938,14 @@ namespace DoranekoDB
             //該当するキーが存在するかどうか(基本的にはパラメータは残りっぱなしなので, 著しく速度が低下する場合は、ClearSQLParameterすることをお勧めします)
             if (this.SQLParameter.Keys.Count > 0)
             {
-                foreach (string eachKey in this.SQLParameter.Keys)
-                {
-                    if (sql.Contains(eachKey))
+
+                var arr = this.SQLParameter.Select(
+                    s =>
                     {
+
+                        var motoPara = s.Value;
                         DbParameter para = this.GetParameter();
-                        DBUseParameter motoPara = this.SQLParameter[eachKey];
+
                         para.ParameterName = motoPara.ParameterName;
                         para.DbType = motoPara.DbType;
                         if (motoPara.Value == null)
@@ -947,39 +956,57 @@ namespace DoranekoDB
                         {
                             para.Value = motoPara.Value;
                         }
-                        cmd.Parameters.Add(para);
 
-
-                        if (string.IsNullOrEmpty(sqlLog) == false)
-                        {
-                            var value = "";
-                            if (motoPara.Value == null)
-                            {
-                                value = "null";
-                            }
-                            else
-                            {
-                                value = "'" + motoPara.Value.ToString().Replace("'", "''") + "'";
-                            }
-
-                            var dataType = "";
-                            foreach (var fm in DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName))
-                            {
-                                dataType = fm.DATA_TYPE;
-                            }
-
-                            if (string.IsNullOrEmpty(dataType) == false)
-                            {
-                                value = string.Format(this.CastSQL, value, dataType);
-                            }
-
-                            sqlLog = sqlLog.Replace(eachKey, value);
-                        }
+                        return para;
                     }
+                    ).ToArray();
+
+                cmd.Parameters.AddRange(arr);
+               
+
+                if (string.IsNullOrEmpty(sqlLog) == false)
+                {
+
+                    sqlLog = Regex.Replace(sqlLog, @"@\d+.+?",
+                            r =>
+                            {
+                                var value = r.Value;
+                                DBUseParameter motoPara = this.SQLParameter[r.Value];
+
+                                if (motoPara.Value == null)
+                                {
+                                    value = "null";
+                                }
+                                else
+                                {
+                                    value = "'" + motoPara.Value.ToString().Replace("'", "''") + "'";
+                                }
+
+                                var dataType = "";
+
+                                var field = DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName).FirstOrDefault();
+
+                                if (field != null)
+                                {
+                                    dataType = field.DATA_TYPE;
+                                }
+
+                                if (string.IsNullOrEmpty(dataType) == false)
+                                {
+                                    value = string.Format(this.CastSQL, value, dataType);
+                                }
+
+
+                                return value;
+                            }
+
+
+                        );
 
                 }
-
             }
+
+
 
             if (this.IsTransaction == true)
             {

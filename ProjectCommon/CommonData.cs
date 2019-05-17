@@ -143,12 +143,12 @@ public class CommonData
 
 
         //（必要であれば）SQLLogを吐き出し
-        /*
+
         db.SetSQLLog = (paraSQL) =>
         {
             //log4net　などを利用し、paraSQLをどこかに吐き出すPGを作成
         };
-        */
+
 
         return db;
     }

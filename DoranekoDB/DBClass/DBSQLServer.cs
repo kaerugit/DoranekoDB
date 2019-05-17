@@ -40,9 +40,9 @@ namespace DoranekoDB
             return new SqlDataAdapter();
         }
 
-        protected override DbCommandBuilder GetCommandBuilder(DbDataAdapter dda)
+        protected override DbCommandBuilder GetCommandBuilder()
         {
-            return new SqlCommandBuilder((SqlDataAdapter)dda);
+            return new SqlCommandBuilder();
         }
 
         /// <summary>

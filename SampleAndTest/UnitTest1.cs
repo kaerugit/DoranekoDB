@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -366,6 +367,8 @@ namespace SampleAndTest
 
         }
 
+        const int MAX_DATA = 10000;
+
         [Fact(DisplayName = "05データ追加・更新(Dataset)")]
         public void DBDataSet()
         {
@@ -387,7 +390,7 @@ namespace SampleAndTest
             var dt = db.DataSet.Tables[0];
             var nowString = System.DateTime.Now.ToString("yyyyMMddHHmmss");
             //100件データを作成
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < MAX_DATA; i++)
             {
                 var drNew = dt.NewRow();
 
@@ -510,7 +513,7 @@ namespace SampleAndTest
                 db.Execute(tbl.GetCreateSQL(tempTableName, dataList[0].Keys.ToList()));
 
                 //～通常版
-                if (true)
+                if (false)
                 {
                     //db.BeginTransaction();
                     db.ConnectionAutoClose = false; //##テーブルが消えるので・・
@@ -609,6 +612,68 @@ namespace SampleAndTest
 
                     }
                 }
+
+                //疑似BULK INSERT (あまり早くない)
+                if (true)
+                {
+                    var insertCount = 200;
+                    //var data = Enumerable.Range(0, dataList.Count);
+
+                    var tblTemp = new TableHelper(db, DbTable.T_TEST.Name, TableHelper.FIELD_GET_TYPE.Field);
+                    
+                    Enumerable.Range(0, (dataList.Count / insertCount) + (dataList.Count % insertCount == 0 ? 0 : 1))
+                                .Select(
+                                    (index) =>
+                                    {
+                                        return dataList.Skip(insertCount * index).Take(insertCount).ToList();
+                                    }
+                               ).ToList()
+                               .ForEach(
+                                    (eachData) =>
+                                    {
+                                        var sb = new StringBuilder();
+                                        sb.Append($"insert into {tempTableName}");
+                                        sb.Append($"({tblTemp.InsertIntoSQL})");
+
+                                        sb.Append($" values ");
+
+                                        var firstFlag = true;
+
+                                        foreach (var data in eachData)
+                                        {
+                                            tblTemp.Reset();
+
+                                            foreach (var eachDic in tblTemp.Field.ToList())
+                                            {
+                                                object value  = System.DBNull.Value;
+                                                if (data.Keys.Contains(eachDic.Key))
+                                                {
+                                                    value = data[eachDic.Key];
+                                                }
+
+                                                tblTemp.AddParameter(eachDic.Key, value);
+                                            }
+
+                                            if (firstFlag == true)
+                                            {
+                                                firstFlag = false;
+                                            }
+                                            else
+                                            {
+                                                sb.Append($",");
+                                            }
+
+                                            sb.Append($"({tblTemp.InsertSelectSQL})");
+
+                                        }
+
+                                        db.Execute(sb.ToString());
+                                        db.ClearSQLParameter();
+                                    }
+                                );
+
+                }
+
             }
 
 

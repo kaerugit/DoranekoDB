@@ -112,6 +112,7 @@ namespace DoranekoDB
             this.Field[fildName] = db.AddInsertParameter(fildName, data);
         }
 
+        private List<FieldDataMember> fieldCache = null;
         public void Reset()
         {
             var fullNameFlag = false;
@@ -142,8 +143,12 @@ namespace DoranekoDB
             this.IgnoreFieldList.Clear();
             this.ColumnList.Clear();
 
-
-            foreach (var fm in DBFieldData.FieldDataMemberList.Where(f => f.TABLE_NAME == this.TableName))
+            if (this.fieldCache == null)
+            {
+                this.fieldCache = DBFieldData.FieldDataMemberList.Where(f => f.TABLE_NAME == this.TableName).ToList();
+            }
+            
+            foreach (var fm in this.fieldCache)
             {
                 string fieldName = fm.COLUMN_NAME;
                 if ((this.ColumnList.Contains(fieldName) == false))
