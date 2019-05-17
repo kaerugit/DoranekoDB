@@ -61,7 +61,7 @@ namespace DoranekoDB
         /// 引数：左から　SQL_UPDATE_TYPE、トランザクション中の場合：true、変換エラーの場合：true、該当レコードのDatarow、フィールド名、値
         /// 戻り値：セットしたい値
         /// </remarks>
-        public Func<DBFieldData.SQL_UPDATE_TYPE, Boolean,  Boolean, DataRow, String, Object, Object> InsertUpdateDataDataRow { get; set; } = null;
+        public Func<DBFieldData.SQL_UPDATE_TYPE, Boolean, Boolean, DataRow, String, Object, Object> InsertUpdateDataDataRow { get; set; } = null;
 
 
         ///// <summary>
@@ -95,7 +95,7 @@ namespace DoranekoDB
 
         /// <summary>OpenDataSet使用時テーブルのスキーマも取得する場合：true</summary>
         /// <remarks>取得後自動的にfalseに変更されます</remarks>
-        bool IsSchema { get; set; } = false;
+        public bool IsSchema { get; set; } = false;
 
         //■■■DB毎(SQLServer,Oracle)の固有の設定（サンプル：DBSQLServer）■■■
 
@@ -103,9 +103,10 @@ namespace DoranekoDB
         /// <remarks>oracleは : </remarks>
         protected String ParameterKigo { get; set; }
 
-        /// <summary>文字列連結するときの記号</summary>
-        ///  <remarks>oracleは || </remarks>
-        protected String RenketuMoji { get; set; }
+        //すべてのDBで使える？CONCATに変更したので不要
+        ///// <summary>文字列連結するときの記号</summary>
+        /////  <remarks>oracleは || </remarks>
+        //protected String RenketuMoji { get; set; }
 
         /// <summary>fromがないSQLの時の構文</summary>
         ///  <remarks>
@@ -133,7 +134,7 @@ namespace DoranekoDB
         /// スキーマ取得用SQL
         /// </summary>
         /// <returns>ドキュメントにも使えるかもしれません・・</returns>
-        public abstract string GetSchemaSQL();
+        public abstract string GetSchemaSQL(string splitString = "");
 
         //■■■その他■■■
 
@@ -371,15 +372,15 @@ namespace DoranekoDB
                     {
                         if (fugo.ToLower().StartsWith("like%"))
                         {
-                            return fileName + " like " + parameterString + " " + this.RenketuMoji + " \'" + this.LikeMoji + "\'";
+                            return fileName + " like CONCAT(" + parameterString + ",\'" + this.LikeMoji + "\')";
                         }
                         else if (fugo.ToLower().StartsWith("%like"))
                         {
-                            return fileName + " like \'" + this.LikeMoji + "\' " + this.RenketuMoji + " " + parameterString + "";
+                            return fileName + " like CONCAT(\'" + this.LikeMoji + "\'," + parameterString + ")";
                         }
                         else if (fugo.ToLower().StartsWith("like"))
                         {
-                            return fileName + " like \'" + this.LikeMoji + "\' " + this.RenketuMoji + " " + parameterString + " " + this.RenketuMoji + " \'" + this.LikeMoji + "\'";
+                            return fileName + " like CONCAT(\'" + this.LikeMoji + "\'," + parameterString + ",\'" + this.LikeMoji + "\')";
                         }
                         else if ((lastData == System.DBNull.Value)) //nullの処理
                         {
@@ -435,10 +436,10 @@ namespace DoranekoDB
             else
             {
                 // 存在しない場合は追加
-                if ((noFieldExitFlag == false))
-                {
-                    this.setField(fileName);
-                }
+                //if ((noFieldExitFlag == false))
+                //{
+                this.setField(fileName);
+                //}
 
                 // もう一度確認
                 if (DBFieldData.FieldMember.ContainsKey(fileName))
@@ -455,7 +456,12 @@ namespace DoranekoDB
 
 
 #if DEBUG
-                    throw new ApplicationException("定義がありません");
+                    //datarowの場合に項目を追加している場合は無視する（addparameter系はチェック(＆エラー表示)）
+                    if (noFieldExitFlag == true)
+                    {
+                        throw new ApplicationException("定義がありません");
+                    }
+
 #endif
 
                 }
@@ -834,7 +840,7 @@ namespace DoranekoDB
         ///<remarks>
         ///tableNameを指定しない場合は、DataSetを一旦Clearします。
         ///</remarks>
-        public void UpdateDataSet(string tableName = "",bool updateFlag = true )
+        public void UpdateDataSet(string tableName = "", bool updateFlag = true)
         {
             foreach (DataTable dt in this.DataSet.Tables)
             {
@@ -866,14 +872,14 @@ namespace DoranekoDB
                         {
                             DataColumn col = dt.Columns[i];
                             object data = dr[i];
-                            
+
                             DbType outDbType;
                             var errorFlag = changeValue(sqlUpdateType.Value, dr, col.ColumnName, ref data, out outDbType, true);
 
                             //共通項目の更新
                             if (InsertUpdateDataDataRow != null)
                             {
-                                this.IsInsertUpdateCancel = false; 
+                                this.IsInsertUpdateCancel = false;
                                 data = InsertUpdateDataDataRow.Invoke(sqlUpdateType.Value, this.IsTransaction, errorFlag, dr, col.ColumnName, data);
                                 //キャンセルの場合は処理中止
                                 if (this.IsInsertUpdateCancel == true)
@@ -889,13 +895,13 @@ namespace DoranekoDB
 
                 }
 
-                
+
                 if (updateFlag)
                 {
                     //一時テーブルなどエラーが出る場合は　ConnectionAutoClose　プロパティをfalseにする事
                     this.adapter.Update(dt);
                 }
-                
+
             }
 
             if ((string.IsNullOrEmpty(tableName) == true))
@@ -937,7 +943,8 @@ namespace DoranekoDB
                         {
                             para.Value = System.DBNull.Value;
                         }
-                        else { 
+                        else
+                        {
                             para.Value = motoPara.Value;
                         }
                         cmd.Parameters.Add(para);
@@ -950,8 +957,9 @@ namespace DoranekoDB
                             {
                                 value = "null";
                             }
-                            else {
-                                value = "'" + motoPara.Value.ToString().Replace("'","''") + "'";
+                            else
+                            {
+                                value = "'" + motoPara.Value.ToString().Replace("'", "''") + "'";
                             }
 
                             var dataType = "";
@@ -960,12 +968,12 @@ namespace DoranekoDB
                                 dataType = fm.DATA_TYPE;
                             }
 
-                            if (string.IsNullOrEmpty(dataType)==false )
+                            if (string.IsNullOrEmpty(dataType) == false)
                             {
                                 value = string.Format(this.CastSQL, value, dataType);
                             }
 
-                            sqlLog = sqlLog.Replace(eachKey,value);
+                            sqlLog = sqlLog.Replace(eachKey, value);
                         }
                     }
 
@@ -1045,7 +1053,7 @@ namespace DoranekoDB
         }
         #endregion
 
-       
+
 
         #region IDisposable Support
         private bool disposedValue = false; // 重複する呼び出しを検出するには

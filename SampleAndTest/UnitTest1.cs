@@ -470,6 +470,12 @@ namespace SampleAndTest
                 drSelect[DbTable.T_TEST.バイナリー.Name] = MyData;
             }
             drSelect[DbTable.T_TEST.フラグ.Name] = DBMastar.DBTrueValue;
+
+            //true false(bool)の変換 ※nullの場合エラーになるのでプロジェクト用に専用関数作ってもよいかも・・
+            Assert.True((bool)(drSelect[DbTable.T_TEST.フラグ.Name]));                     //変換かけて true判定でもOK(ただしnullの場合エラー)
+            Assert.True(drSelect.Field<bool>(DbTable.T_TEST.フラグ.Name));                 //nget より　System.Data.DataSetExtensions　の参照が必要　書き方がちょっとわかりにくい？？
+            //Assert.Equal(drSelect[DbTable.T_TEST.フラグ.Name],DBMastar.DBTrueValue);       //こちらでもOK
+
             drSelect["定義フィールドを勝手に追加"] = DBMastar.DBTrueValue;
             dtSelect.Rows.Add(drSelect);
 
@@ -671,7 +677,7 @@ namespace SampleAndTest
                     ";
 
             var db1 = CommonData.GetDB();
-            //保存したパラメータをセット
+            //保存したパラメータをコピー(dbSave→db1)
             var where1 = db1.CopySQL(dbSave, whereSave);     //戻り値は whereSave
 
             var dt1 = db1.GetDataTable($@"

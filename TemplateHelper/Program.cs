@@ -16,9 +16,9 @@ namespace TemplateHelper
         }
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+
             //カレントフォルダ
-            Console.WriteLine(Directory.GetCurrentDirectory());
+            //Console.WriteLine(Directory.GetCurrentDirectory());
 
             //var argsList = new List<string>();
             var argsDictionary = new Dictionary<string,string>();

@@ -15,7 +15,6 @@ namespace DoranekoDB
         public DBSQLServer()
         {
             this.ParameterKigo = "@";
-            this.RenketuMoji = "+";
             this.DummyTable = "";
             this.CastSQL = "cast({0} as {1})";
         }
@@ -46,8 +45,19 @@ namespace DoranekoDB
             return new SqlCommandBuilder((SqlDataAdapter)dda);
         }
 
-        public override string GetSchemaSQL()
+        /// <summary>
+        /// スキーマ用SQL取得
+        /// </summary>
+        /// <param name="splitString">論理名との区切り文字をセット（何も指定しない場合改行とする）</param>
+        /// <returns></returns>
+        public override string GetSchemaSQL(string splitString="")
         {
+
+
+            if (splitString.Length == 0)
+            {
+                splitString = "CHAR(13) + CHAR(10)";
+            }
 
             //最低こちらのデータがあればOK（CSVで表現）
             //"TABLE_NAME","COLUMN_NAME","DATA_TYPE","IS_PRIMARYKEY","IS_NULLABLE","COLUMN_DEFAULT","IS_AUTO_NUMBER","IS_IGNORE_FIELD"
@@ -63,19 +73,19 @@ namespace DoranekoDB
 
             sb.Append("SELECT ");
             sb.Append("    TABLE_NAME ");
-            sb.Append("  , CAST(CASE WHEN CHARINDEX(CHAR(13) + CHAR(10),TABLE_DESCRIPTION) = 0 THEN ");
+            sb.Append("  , CAST(CASE WHEN CHARINDEX(" + splitString + ",TABLE_DESCRIPTION) = 0 THEN ");
             sb.Append("       ISNULL(TABLE_DESCRIPTION,TABLE_NAME) ");
             sb.Append("    ELSE ");
             sb.Append("       REPLACE( ");
             sb.Append("         REPLACE( ");
-            sb.Append("             SUBSTRING(TABLE_DESCRIPTION,1,CHARINDEX(CHAR(13) + CHAR(10),TABLE_DESCRIPTION)) ");
+            sb.Append("             SUBSTRING(TABLE_DESCRIPTION,1,CHARINDEX(" + splitString + ",TABLE_DESCRIPTION)) ");
             sb.Append("         ,CHAR(13),'')");
             sb.Append("       ,CHAR(10),'')");
             sb.Append("    END AS NVARCHAR(4000)) AS LOGICAL_TABLE_NAME ");
-            sb.Append("  , CAST(CASE WHEN CHARINDEX(CHAR(13) + CHAR(10),TABLE_DESCRIPTION) = 0 THEN ");
+            sb.Append("  , CAST(CASE WHEN CHARINDEX(" + splitString + ",TABLE_DESCRIPTION) = 0 THEN ");
             sb.Append("       TABLE_DESCRIPTION ");
             sb.Append("    ELSE ");
-            sb.Append("       SUBSTRING(TABLE_DESCRIPTION,CHARINDEX(CHAR(13) + CHAR(10),TABLE_DESCRIPTION)+LEN(CHAR(13) + CHAR(10)),LEN(TABLE_DESCRIPTION)) ");
+            sb.Append("       SUBSTRING(TABLE_DESCRIPTION,CHARINDEX(" + splitString + ",TABLE_DESCRIPTION)+LEN(" + splitString + "),LEN(TABLE_DESCRIPTION)) ");
             sb.Append("    END AS NVARCHAR(4000)) AS TABLE_DESCRIPTION ");
             sb.Append("  , IS_PRIMARYKEY ");
             sb.Append("  , IS_AUTO_NUMBER ");
@@ -85,19 +95,19 @@ namespace DoranekoDB
             sb.Append("    THEN '' ");
             sb.Append("    ELSE '(' + DATA_SIZE + ')' ");
             sb.Append("    END AS DATA_TYPE ");
-            sb.Append("  , CAST(CASE WHEN CHARINDEX(CHAR(13) + CHAR(10),COLUMN_DESCRIPTION) = 0 THEN ");
+            sb.Append("  , CAST(CASE WHEN CHARINDEX(" + splitString + ",COLUMN_DESCRIPTION) = 0 THEN ");
             sb.Append("       ISNULL(COLUMN_DESCRIPTION,COLUMN_NAME) ");
             sb.Append("    ELSE ");
             sb.Append("       REPLACE( ");
             sb.Append("         REPLACE( ");
-            sb.Append("             SUBSTRING(COLUMN_DESCRIPTION,1,CHARINDEX(CHAR(13) + CHAR(10),COLUMN_DESCRIPTION)) ");
+            sb.Append("             SUBSTRING(COLUMN_DESCRIPTION,1,CHARINDEX(" + splitString + ",COLUMN_DESCRIPTION)) ");
             sb.Append("         ,CHAR(13),'')");
             sb.Append("       ,CHAR(10),'')");
             sb.Append("    END AS NVARCHAR(4000)) AS LOGICAL_COLUMN_NAME ");
-            sb.Append("  , CAST(CASE WHEN CHARINDEX(CHAR(13) + CHAR(10),COLUMN_DESCRIPTION) = 0 THEN ");
+            sb.Append("  , CAST(CASE WHEN CHARINDEX(" + splitString + ",COLUMN_DESCRIPTION) = 0 THEN ");
             sb.Append("       COLUMN_DESCRIPTION ");
             sb.Append("    ELSE ");
-            sb.Append("             SUBSTRING(COLUMN_DESCRIPTION,CHARINDEX(CHAR(13) + CHAR(10),COLUMN_DESCRIPTION)+LEN(CHAR(13) + CHAR(10)),LEN(COLUMN_DESCRIPTION)) ");
+            sb.Append("             SUBSTRING(COLUMN_DESCRIPTION,CHARINDEX(" + splitString + ",COLUMN_DESCRIPTION)+LEN(" + splitString + "),LEN(COLUMN_DESCRIPTION)) ");
             sb.Append("    END AS NVARCHAR(4000)) AS COLUMN_DESCRIPTION ");
             sb.Append("  , IS_NULLABLE ");
             sb.Append("  , COLUMN_DEFAULT ");
@@ -279,7 +289,11 @@ namespace DoranekoDB
                     else if (sizeSplit.Length == 1)
                     {
                         //varbinary(max) とかは無視
-                        if (pdbType == DbType.String)
+                        if(
+                            pdbType == DbType.String ||
+                            pdbType == DbType.AnsiStringFixedLength ||
+                            pdbType == DbType.StringFixedLength ||
+                            pdbType == DbType.AnsiString)
                         { 
                             if (string.IsNullOrEmpty(sizeSplit[0]) == false)
                             {
