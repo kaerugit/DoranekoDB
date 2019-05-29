@@ -117,8 +117,8 @@ namespace DoranekoDB
         public String DummyTable { get; set; }
 
         /// <summary>Cast用SQL</summary>
-        /// <remarks>SQLのデバッグで使用</remarks>
-        public String CastSQL { get; set; }
+        /// <remarks>SQLのデバッグで使用(未設定の場合（""）の場合は変換なし)</remarks>
+        public String CastSQL { get; set; } = "";
 
         /// <summary>Like検索の記号</summary>
         protected string LikeMoji { get; set; } = "%";
@@ -315,7 +315,7 @@ namespace DoranekoDB
                 //パラメータにセットする値が増える場合は注意
                 DBUseParameter para; // DbParameter = Me.GetParameter()
                 para.FieldName = fileName;
-                para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "p";
+                para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "a";
 
                 //列挙型なら数字に変更
                 if (eachPara != null && (string.IsNullOrEmpty(eachPara.ToString()) == false) && (eachPara.GetType().IsEnum == true))
@@ -733,15 +733,24 @@ namespace DoranekoDB
         /// dbSave→db　にコピー
         /// var db = CommonData.GetDB();
         /// var sql = db.CopySQL(dbSave, where)     //戻り値は where
-        /// </remarks>
+        /// </remarks>-
         public string CopySQL(DBMastar copydb, string sql)
         {
             foreach (string eachKey in copydb.SQLParameter.Keys)
             {
+
+                
+                var parameterName = eachKey.Substring(eachKey.Length - 1);
+                parameterName = ((char)((int)(char.Parse(parameterName)) + 1)).ToString();
+                if (parameterName.ToLower() == "z")
+                {
+                    parameterName = "a";
+                }
+
                 //パラメータの値がダブってはいけないので違う番号を付与
                 DBUseParameter para;
                 para.FieldName = copydb.SQLParameter[eachKey].FieldName;
-                para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "c";
+                para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + parameterName;
                 para.DbType = copydb.SQLParameter[eachKey].DbType;
                 para.Value = copydb.SQLParameter[eachKey].Value;
 
@@ -756,7 +765,6 @@ namespace DoranekoDB
             return sql;
         }
 
-
         /// <summary>
         /// データテーブルの取得
         /// </summary>
@@ -764,17 +772,19 @@ namespace DoranekoDB
         /// <returns></returns>
         public DataTable GetDataTable(string sql)
         {
-            DbCommand cmd = getSQLCommand(sql);
-            DbDataReader ddr = cmd.ExecuteReader();
-            DataTable dt = new DataTable();
-            dt.Load(ddr);
-            ddr.Close();
-            if (this.IsTransaction == false && this.ConnectionAutoClose)
+            using (DbCommand cmd = getSQLCommand(sql))
             {
-                this.Close();
-            }
+                DbDataReader ddr = cmd.ExecuteReader();
+                DataTable dt = new DataTable();
+                dt.Load(ddr);
+                ddr.Close();
+                if (this.IsTransaction == false && this.ConnectionAutoClose)
+                {
+                    this.Close();
+                }
 
-            return dt;
+                return dt;
+            }
         }
 
         /// <summary>
@@ -784,10 +794,17 @@ namespace DoranekoDB
         /// <returns></returns>
         public int Execute(string sql)
         {
-            DbCommand cmd = getSQLCommand(sql);
-            return cmd.ExecuteNonQuery();
-        }
+            using (DbCommand cmd = getSQLCommand(sql))
+            {
+                var dataCount = cmd.ExecuteNonQuery();
+                if (this.IsTransaction == false && this.ConnectionAutoClose)
+                {
+                    this.Close();
+                }
 
+                return dataCount;
+            }
+        }
 
         /// <summary>
         /// DataSetのOpen
@@ -939,30 +956,29 @@ namespace DoranekoDB
             if (this.SQLParameter.Keys.Count > 0)
             {
 
-                var arr = this.SQLParameter.Select(
-                    s =>
-                    {
 
-                        var motoPara = s.Value;
-                        DbParameter para = this.GetParameter();
-
-                        para.ParameterName = motoPara.ParameterName;
-                        para.DbType = motoPara.DbType;
-                        if (motoPara.Value == null)
+                this.SQLParameter.ToList().ForEach(
+                        e =>
                         {
-                            para.Value = System.DBNull.Value;
-                        }
-                        else
-                        {
-                            para.Value = motoPara.Value;
-                        }
+                            //遅い場合はこちらを元のDB型（SqlParameter　などに書き換えたほうが早い）
+                            var motoPara = e.Value;
+                            DbParameter para = this.GetParameter();
 
-                        return para;
-                    }
-                    ).ToArray();
+                            para.ParameterName = motoPara.ParameterName;
+                            para.DbType = motoPara.DbType;
+                            if (motoPara.Value == null)
+                            {
+                                para.Value = System.DBNull.Value;
+                            }
+                            else
+                            {
+                                para.Value = motoPara.Value;
+                            }
 
-                cmd.Parameters.AddRange(arr);
-               
+                            cmd.Parameters.Add(para);
+                        }
+                    );
+
 
                 if (string.IsNullOrEmpty(sqlLog) == false)
                 {
@@ -982,18 +998,23 @@ namespace DoranekoDB
                                     value = "'" + motoPara.Value.ToString().Replace("'", "''") + "'";
                                 }
 
-                                var dataType = "";
 
-                                var field = DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName).FirstOrDefault();
-
-                                if (field != null)
+                                if (this.CastSQL.Length != 0)
                                 {
-                                    dataType = field.DATA_TYPE;
-                                }
+                                    var dataType = "";
 
-                                if (string.IsNullOrEmpty(dataType) == false)
-                                {
-                                    value = string.Format(this.CastSQL, value, dataType);
+                                    var field = DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName).FirstOrDefault();
+
+                                    if (field != null)
+                                    {
+                                        dataType = field.DATA_TYPE;
+                                    }
+
+                                    if (string.IsNullOrEmpty(dataType) == false)
+                                    {
+                                        value = string.Format(this.CastSQL, value, dataType);
+                                    }
+
                                 }
 
 

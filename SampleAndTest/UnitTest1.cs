@@ -1,4 +1,5 @@
 using DoranekoDB;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -6,12 +7,54 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 //メモ　開始するには　メニュー　テストー実行(or デバッグ)-全てのテスト
 
-
 namespace SampleAndTest
 {
+
+
+    #region "順番用　https://stackoverflow.com/questions/9210281/how-to-set-the-test-case-sequence-in-xunit　参考"
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public class TestPriorityAttribute : Attribute
+    {
+        public TestPriorityAttribute(int priority)
+        {
+            this.Priority = priority;
+        }
+
+        public int Priority { get; }
+    }
+
+    public class PriorityOrderer : ITestCaseOrderer
+    {
+
+        //[TestCaseOrderer("SampleAndTest.PriorityOrderer", "SampleAndTest")]　の個所を定義
+
+        public IEnumerable<TTestCase> OrderTestCases<TTestCase>(IEnumerable<TTestCase> testCases) where TTestCase : ITestCase
+        {
+            var sortedMethods = new Dictionary<int, TTestCase>();
+
+            foreach (var testCase in testCases)
+            {
+                var attributeInfo = testCase.TestMethod.Method.GetCustomAttributes(typeof(TestPriorityAttribute).AssemblyQualifiedName)
+                    .SingleOrDefault();
+                if (attributeInfo != null)
+                {
+                    var priority = attributeInfo.GetNamedArgument<int>("Priority");
+                    sortedMethods.Add(priority, testCase);
+                }
+            }
+
+            return sortedMethods.OrderBy(x => x.Key).Select(x => x.Value);
+        }
+    }
+    #endregion
+
+    [TestCaseOrderer("SampleAndTest.PriorityOrderer", "SampleAndTest")] //PriorityOrderer
     public class UnitTest1
     {
         enum DATA
@@ -19,14 +62,15 @@ namespace SampleAndTest
             one = 1
         }
 
-
         public UnitTest1()
         {
+
             //必ず1回実行
             CommonData.InitDB();
+
         }
 
-        [Fact(DisplayName = "01データベース初期設定")]
+        [Fact(DisplayName = "01データベース初期設定"), TestPriority(1)]
         public void DBInit()
         {
             //CommonData.InitDB();
@@ -34,7 +78,7 @@ namespace SampleAndTest
             Assert.NotEqual(0, (long)DBFieldData.FieldDataMemberList.Count);
         }
 
-        [Fact(DisplayName = "02データ追加・更新(SQL)")]
+        [Fact(DisplayName = "02データ追加・更新(SQL)"), TestPriority(2)]
         public void DBSQL()
         {
             var db = CommonData.GetDB();
@@ -185,7 +229,8 @@ namespace SampleAndTest
 
         }
 
-        [Fact(DisplayName = "03通常のSELECT")]
+
+        [Fact(DisplayName = "03通常のSELECT"), TestPriority(3)]
         public void Select1()
         {
 
@@ -295,7 +340,8 @@ namespace SampleAndTest
 
         }
 
-        [Fact(DisplayName = "04通常のSELECT(sql文の使いまわし)")]
+
+        [Fact(DisplayName = "04通常のSELECT(sql文の使いまわし)"), TestPriority(4)]
         public void Select2()
         {
 
@@ -369,10 +415,11 @@ namespace SampleAndTest
 
         const int MAX_DATA = 10000;
 
-        [Fact(DisplayName = "05データ追加・更新(Dataset)")]
+        [Fact(DisplayName = "05データ追加・更新(Dataset)"), TestPriority(5)]
         public void DBDataSet()
         {
             var db = CommonData.GetDB();
+            db.ConnectionAutoClose = false;
 
             db.BeginTransaction();
 
@@ -690,9 +737,10 @@ namespace SampleAndTest
                 db.Rollback();
             }
 
+            db.Close();
         }
 
-        [Fact(DisplayName = "06パラメータの保存")]
+        [Fact(DisplayName = "06パラメータの保存"), TestPriority(6)]
         public void SaveParameter()
         {
             var db = CommonData.GetDB();
@@ -730,7 +778,7 @@ namespace SampleAndTest
 
         }
 
-        [Fact(DisplayName = "07パラメータのコピー")]
+        [Fact(DisplayName = "07パラメータのコピー"), TestPriority(7)]
         public void CopyParameter()
         {
 
@@ -772,4 +820,6 @@ namespace SampleAndTest
 
 
     }
+
+
 }

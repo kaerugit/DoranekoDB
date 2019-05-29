@@ -327,7 +327,7 @@ namespace DoranekoDB
         /// <summary>
         /// CreateTable文の作成
         /// </summary>
-        /// <param name="tableName">作成したいSQL文</param>
+        /// <param name="tableName">作成したいテーブル名</param>
         /// <param name="fieldDataList">作成したいフィールド</param>
         /// <returns></returns>
         /// <remarks>
@@ -344,7 +344,7 @@ namespace DoranekoDB
 #if DEBUG
                 throw new ApplicationException("CreateTableSQLが設定されていません。");
 #endif
-               
+
             }
 
             if (fieldDataList.Count == 0)
@@ -352,7 +352,7 @@ namespace DoranekoDB
                 exitFlag = true;
             }
 
-            if(exitFlag == true)
+            if (exitFlag == true)
             {
                 return "";
             }
@@ -379,17 +379,18 @@ namespace DoranekoDB
                 return "";
             }
 
+            var primaryKey = String.Join(",", this.PrimaryKeyList.ToArray());
             return string.Format(
-                DBFieldData.CreateTableSQL, tableName, sql.Substring(1));
+            DBFieldData.CreateTableSQL, tableName, sql.Substring(1), primaryKey);
         }
 
-        
+
         /// <summary>
         /// 定義のないもの(Dbtableに無いもの)をほかの定義に変換
         /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
-        private  string changeDefinition(string fieldName)
+        private string changeDefinition(string fieldName)
         {
             //定義(Dbtable)に無いものは代用の定義を使う
             if (DBFieldData.DummyFieldChangePublic != null && DBFieldData.DummyFieldChangePublic.ContainsKey(fieldName))

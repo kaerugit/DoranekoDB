@@ -56,10 +56,11 @@ namespace DoranekoDB
         /// データを更新したい場合は主キーが必要なので追加しておいたほうが無難
         /// {0} にテーブル名
         /// {1} にフィールド名　がセットされます。
+        /// {2} に主キーカンマ区切りがセットされます
         /// サンプル
         /// " create table {0} ({1},TEMP_AUTO_NUMBER int identity not null,primary key (TEMP_AUTO_NUMBER))"
         /// </remarks>
-        public static string CreateTableSQL = "";
+        public static string CreateTableSQL = ""; 
 
         /// <summary>【共通用】定義(Dbtable)に無いものは代用の定義を使う場合にセット キー：代用の定義　　値：変換の定義(Dbtable.～)　</summary>
         /// <remarks>
