@@ -72,11 +72,11 @@ namespace DoranekoDB
         ///// <param name="paraIsTransaction">トランザクション中の場合：true</param>
         ///// <param name="paraIsError">変換エラーの場合：true</param>
         ///// <param name="paraDr">該当レコードのDatarow</param>
-        ///// <param name="paraFileName">フィールド名</param>
+        ///// <param name="parafieldName">フィールド名</param>
         ///// <param name="paraData">値</param>
         ///// <param name="paraCancelFlag">処理をキャンセルする場合：trueをセット</param>
         ///// <returns></returns>
-        //public delegate Object InsertUpdateDataDataRowdelegate(DBFieldData.SQL_UPDATE_TYPE paraSqlUpdateType, Boolean paraIsTransaction, Boolean paraIsError, DataRow paraDr, String paraFileName, Object paraData ,out bool paraCancelFlag);
+        //public delegate Object InsertUpdateDataDataRowdelegate(DBFieldData.SQL_UPDATE_TYPE paraSqlUpdateType, Boolean paraIsTransaction, Boolean paraIsError, DataRow paraDr, String parafieldName, Object paraData ,out bool paraCancelFlag);
         //public InsertUpdateDataDataRowdelegate InsertUpdateDataDataRow { get; set; } = null;
 
 
@@ -167,20 +167,20 @@ namespace DoranekoDB
         }
 
 
-        public string AddParameter(string fileName, object data)
+        public string AddParameter(string fieldName, object data)
         {
-            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.WHERE, fileName, data, "@@@");
+            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.WHERE, fieldName, data, "@@@");
         }
 
-        public string AddInsertParameter(string fileName, object data)
+        public string AddInsertParameter(string fieldName, object data)
         {
-            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.INSERT, fileName, data, "@@@");
+            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.INSERT, fieldName, data, "@@@");
         }
 
 
-        //public string AddUpdateParameter(string fileName, object data)
+        //public string AddUpdateParameter(string fieldName, object data)
         //{
-        //    return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.UPDATE, fileName, data, "@@@");
+        //    return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.UPDATE, fieldName, data, "@@@");
         //}
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace DoranekoDB
 
 
 
-        public string AddWhereParameter(string fileName, object data, WHERE_FUGO whereFugo)
+        public string AddWhereParameter(string fieldName, object data, WHERE_FUGO whereFugo)
         {
             string fugo = "=";
             switch (whereFugo)
@@ -241,25 +241,25 @@ namespace DoranekoDB
                     break;
             }
 
-            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.WHERE, fileName, data, fugo);
+            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.WHERE, fieldName, data, fugo);
         }
 
         ///<summary>
         ///条件の取得
         ///</summary>
-        ///<param name="fileName">フィールド名</param>
+        ///<param name="fieldName">フィールド名</param>
         ///<param name="data">データ
         ///List(of ○○)でin句を作成
         ///bit列は true , false で検索可能
         ///</param>
         ///<param name="fugo">符号(詳しくは、AddWhereParameterの別のバージョン参考)</param>
         ///<returns></returns>
-        public string AddWhereParameter(string fileName, object data, string fugo = "=")
+        public string AddWhereParameter(string fieldName, object data, string fugo = "=")
         {
-            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.WHERE, fileName, data, fugo);
+            return this.execAddParameter(DBFieldData.SQL_UPDATE_TYPE.WHERE, fieldName, data, fugo);
         }
 
-        private string execAddParameter(DBFieldData.SQL_UPDATE_TYPE sqlUpdateType, string fileName, object data, string fugo = "")
+        private string execAddParameter(DBFieldData.SQL_UPDATE_TYPE sqlUpdateType, string fieldName, object data, string fugo = "")
         {
             List<object> lstParameter = new List<object>();
             string parameterString = "";
@@ -314,7 +314,7 @@ namespace DoranekoDB
                 var eachPara = eachParaValue;
                 //パラメータにセットする値が増える場合は注意
                 DBUseParameter para; // DbParameter = Me.GetParameter()
-                para.FieldName = fileName;
+                para.FieldName = fieldName;
                 para.ParameterName = this.ParameterKigo + this.SQLParameter.Keys.Count + "a";
 
                 //列挙型なら数字に変更
@@ -323,7 +323,7 @@ namespace DoranekoDB
                     eachPara = (int)eachPara;
                 }
 
-                if (changeValue(sqlUpdateType, null, fileName, ref eachPara, out para.DbType, false))
+                if (changeValue(sqlUpdateType, null, fieldName, ref eachPara, out para.DbType, false))
                 {
                     dummyWhereFlag = true;
                 }
@@ -377,48 +377,48 @@ namespace DoranekoDB
                     {
                         if (fugo.ToLower().StartsWith("like%"))
                         {
-                            return fileName + " like CONCAT(" + parameterString + ",\'" + this.LikeMoji + "\')";
+                            return fieldName + " like CONCAT(" + parameterString + ",\'" + this.LikeMoji + "\')";
                         }
                         else if (fugo.ToLower().StartsWith("%like"))
                         {
-                            return fileName + " like CONCAT(\'" + this.LikeMoji + "\'," + parameterString + ")";
+                            return fieldName + " like CONCAT(\'" + this.LikeMoji + "\'," + parameterString + ")";
                         }
                         else if (fugo.ToLower().StartsWith("like"))
                         {
-                            return fileName + " like CONCAT(\'" + this.LikeMoji + "\'," + parameterString + ",\'" + this.LikeMoji + "\')";
+                            return fieldName + " like CONCAT(\'" + this.LikeMoji + "\'," + parameterString + ",\'" + this.LikeMoji + "\')";
                         }
                         else if ((lastData == System.DBNull.Value)) //nullの処理
                         {
                             // ○○ is null　に変更
                             if ((fugo == "="))
                             {
-                                return (fileName + " is null ");
+                                return (fieldName + " is null ");
                             }
                             else if ((fugo == "<>"))
                             {
-                                return (fileName + " is not null ");
+                                return (fieldName + " is not null ");
                             }
                         }
                     }
                 }
 
-                return " " + fileName + " " + fugo + " " + parameterString + " ";
+                return " " + fieldName + " " + fugo + " " + parameterString + " ";
             }
 
         }
 
 
-        private bool changeValue(DBFieldData.SQL_UPDATE_TYPE sqlUpdateType, DataRow dr, string paraFileName, ref object data, out DbType paraDbType, bool noFieldExitFlag)
+        private bool changeValue(DBFieldData.SQL_UPDATE_TYPE sqlUpdateType, DataRow dr, string parafieldName, ref object data, out DbType paraDbType, bool noFieldExitFlag)
         {
             // 検索時に DummyWhereString の条件を戻す場合：true
             bool dummyWhereFlag = false;
-            string fileName = paraFileName;
-            int index = fileName.LastIndexOf(".");
+            string fieldName = parafieldName;
+            int index = fieldName.LastIndexOf(".");
 
             //テーブル名.フィールド名の場合
             if ((index > -1))
             {
-                fileName = fileName.Substring(index + 1);
+                fieldName = fieldName.Substring(index + 1);
             }
 
             DBFieldData.FieldData fieldMember;
@@ -434,7 +434,7 @@ namespace DoranekoDB
             fieldMember.Size = 0;
 
             bool findFlag = false;
-            if (DBFieldData.FieldMember.ContainsKey(fileName))
+            if (DBFieldData.FieldMember.ContainsKey(fieldName))
             {
                 findFlag = true;
             }
@@ -443,11 +443,11 @@ namespace DoranekoDB
                 // 存在しない場合は追加
                 //if ((noFieldExitFlag == false))
                 //{
-                this.setField(fileName);
+                this.setField(fieldName);
                 //}
 
                 // もう一度確認
-                if (DBFieldData.FieldMember.ContainsKey(fileName))
+                if (DBFieldData.FieldMember.ContainsKey(fieldName))
                 {
                     findFlag = true;
                 }
@@ -475,7 +475,7 @@ namespace DoranekoDB
 
             if (findFlag == true)
             {
-                fieldMember = DBFieldData.FieldMember[fileName];
+                fieldMember = DBFieldData.FieldMember[fieldName];
             }
             paraDbType = fieldMember.DbType;
 
@@ -739,7 +739,7 @@ namespace DoranekoDB
             foreach (string eachKey in copydb.SQLParameter.Keys)
             {
 
-                
+
                 var parameterName = eachKey.Substring(eachKey.Length - 1);
                 parameterName = ((char)((int)(char.Parse(parameterName)) + 1)).ToString();
                 if (parameterName.ToLower() == "z")
@@ -774,6 +774,7 @@ namespace DoranekoDB
         {
             using (DbCommand cmd = getSQLCommand(sql))
             {
+                //ここでエラーが発生した場合、this.GetDebugSQL(sql) で実行したsql（疑似）を取得可
                 DbDataReader ddr = cmd.ExecuteReader();
                 DataTable dt = new DataTable();
                 dt.Load(ddr);
@@ -796,6 +797,7 @@ namespace DoranekoDB
         {
             using (DbCommand cmd = getSQLCommand(sql))
             {
+                //ここでエラーが発生した場合、this.GetDebugSQL(sql) で実行したsql（疑似）を取得可
                 var dataCount = cmd.ExecuteNonQuery();
                 if (this.IsTransaction == false && this.ConnectionAutoClose)
                 {
@@ -822,6 +824,7 @@ namespace DoranekoDB
             this.adapter.SelectCommand = getSQLCommand(sql);
             DbCommandBuilder cb = this.GetCommandBuilder();
             cb.DataAdapter = this.adapter;
+            //ここでエラーが発生した場合、this.GetDebugSQL(sql) で実行したsql（疑似）を取得可
             cb.GetInsertCommand();
 
             //主キーのないものはエラーになるが、エラーを無視する
@@ -982,47 +985,7 @@ namespace DoranekoDB
 
                 if (string.IsNullOrEmpty(sqlLog) == false)
                 {
-
-                    sqlLog = Regex.Replace(sqlLog, @"@\d+.+?",
-                            r =>
-                            {
-                                var value = r.Value;
-                                DBUseParameter motoPara = this.SQLParameter[r.Value];
-
-                                if (motoPara.Value == null)
-                                {
-                                    value = "null";
-                                }
-                                else
-                                {
-                                    value = "'" + motoPara.Value.ToString().Replace("'", "''") + "'";
-                                }
-
-
-                                if (this.CastSQL.Length != 0)
-                                {
-                                    var dataType = "";
-
-                                    var field = DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName).FirstOrDefault();
-
-                                    if (field != null)
-                                    {
-                                        dataType = field.DATA_TYPE;
-                                    }
-
-                                    if (string.IsNullOrEmpty(dataType) == false)
-                                    {
-                                        value = string.Format(this.CastSQL, value, dataType);
-                                    }
-
-                                }
-
-
-                                return value;
-                            }
-
-
-                        );
+                    sqlLog = GetDebugSQL(sqlLog);
 
                 }
             }
@@ -1101,6 +1064,54 @@ namespace DoranekoDB
         }
         #endregion
 
+
+        /// <summary>
+        /// デバッグ用のSQLの取得（必要ならoverride可）
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <returns></returns>
+        protected virtual string GetDebugSQL(string sql)
+        {
+
+            return Regex.Replace(sql, @"@\d+.+?",
+                r =>
+                {
+                    var value = r.Value;
+                    DBUseParameter motoPara = this.SQLParameter[r.Value];
+
+                    if (motoPara.Value == null)
+                    {
+                        value = "null";
+                    }
+                    else
+                    {
+                        value = "'" + motoPara.Value.ToString().Replace("'", "''") + "'";
+                    }
+
+
+                    if (this.CastSQL.Length != 0)
+                    {
+                        var dataType = "";
+
+                        var field = DBFieldData.FieldDataMemberList.Where(f => f.COLUMN_NAME == motoPara.FieldName).FirstOrDefault();
+
+                        if (field != null)
+                        {
+                            dataType = field.DATA_TYPE;
+                        }
+
+                        if (string.IsNullOrEmpty(dataType) == false)
+                        {
+                            value = string.Format(this.CastSQL, value, dataType);
+                        }
+
+                    }
+
+                    return value;
+                }
+            );
+
+        }
 
 
         #region IDisposable Support

@@ -79,7 +79,7 @@ public class CommonData
         DateTime nowTime = DateTime.Now;
 
         //決まった項目の値をセット(DataRow版)　　★意味不明な場合はコメント推奨
-        db.InsertUpdateDataDataRow = (paraSqlUpdateType, paraIsTransaction, paraIsError　, paraDr, paraFileName, paraData ) =>
+        db.InsertUpdateDataDataRow = (paraSqlUpdateType, paraIsTransaction, paraIsError　, paraDr, paraFieldName, paraData ) =>
             {
                 if (paraIsTransaction)  //トランザクション中の場合
                 {
@@ -101,7 +101,7 @@ public class CommonData
                     paraSqlUpdateType == DBFieldData.SQL_UPDATE_TYPE.UPDATE
                  )
                 {
-                    if (paraFileName == DbTable.T_TEST.更新日時.Name)
+                    if (paraFieldName == DbTable.T_TEST.更新日時.Name)
                     {
                         paraData = nowTime;
                     }
@@ -109,7 +109,7 @@ public class CommonData
 
                 //応用　削除フラグがONの場合、削除日をセット
                 /*
-                if (paraFileName == "削除日")
+                if (paraFieldName == "削除日")
                 {
 
                     if ((bool)(paraDr["削除フラグ"])) {
@@ -142,7 +142,7 @@ public class CommonData
         };
 
 
-        //（必要であれば）SQLLogを吐き出し
+        //（必要であれば）SQLLogを吐き出し　paraSQLはGetDebugSQLの結果がセット
 
         db.SetSQLLog = (paraSQL) =>
         {
