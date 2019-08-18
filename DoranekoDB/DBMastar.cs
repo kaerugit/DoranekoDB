@@ -204,7 +204,7 @@ namespace DoranekoDB
             Like,
             /// <summary>○○から始まる【前方一致】(like '○○%')</summary>
             LikeStart,
-            /// <summary>○○から始まる【前方一致】(like '○○%')</summary>
+            /// <summary>○○で終わる【後方一致】(like '%○○')</summary>
             LikeEnd
         }
 
