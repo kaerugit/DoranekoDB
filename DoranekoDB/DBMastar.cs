@@ -142,7 +142,7 @@ namespace DoranekoDB
         /// <summary>パラメータを管理</summary>
         public DBSQLParameter SQLParameter = new DBSQLParameter();
         //public Dictionary<String, DBUseParameter> ParameterDictionary { get; set; } = new Dictionary<String, DBUseParameter>();
-        private DbDataAdapter adapter;
+        private Dictionary<string ,DbDataAdapter> adapter = null;
 
 
         /// <summary>コネクションのopen</summary>
@@ -820,10 +820,18 @@ namespace DoranekoDB
         /// </remarks>
         public void OpenDataSet(string sql, string tableName = "Default")
         {
-            this.adapter = this.GetDataAdapter();
-            this.adapter.SelectCommand = getSQLCommand(sql);
+            var adp = this.GetDataAdapter();
+
+            if (adapter == null)
+            {
+                adapter = new Dictionary<string, DbDataAdapter>();
+            }
+                
+            this.adapter[tableName] = adp;
+
+            adp.SelectCommand = getSQLCommand(sql);
             DbCommandBuilder cb = this.GetCommandBuilder();
-            cb.DataAdapter = this.adapter;
+            cb.DataAdapter = adp;
             //ここでエラーが発生した場合、this.GetDebugSQL(sql) で実行したsql（疑似）を取得可
             cb.GetInsertCommand();
 
@@ -840,16 +848,21 @@ namespace DoranekoDB
             catch { }
 
 
+            if (this.DataSet == null)
+            {
+                this.DataSet = new DataSet();
+            }
 
-            this.DataSet = new DataSet();
+            this.DataSet.Tables[tableName]?.Clear();
+
             if (this.IsSchema == true)
             {
                 this.IsSchema = false;
-                this.adapter.FillSchema(this.DataSet, SchemaType.Mapped, tableName);
+                adp.FillSchema(this.DataSet, SchemaType.Mapped, tableName);
             }
             else
             {
-                this.adapter.Fill(this.DataSet, tableName);
+                adp.Fill(this.DataSet, tableName);
             }
 
             if (this.IsTransaction == false && this.ConnectionAutoClose)
@@ -926,7 +939,7 @@ namespace DoranekoDB
                 if (updateFlag)
                 {
                     //一時テーブルなどエラーが出る場合は　ConnectionAutoClose　プロパティをfalseにする事
-                    this.adapter.Update(dt);
+                    this.adapter[dt.TableName].Update(dt);
                 }
 
             }
@@ -934,6 +947,7 @@ namespace DoranekoDB
             if ((string.IsNullOrEmpty(tableName) == true))
             {
                 this.DataSet.Clear();
+                this.adapter.Clear();
             }
 
         }
@@ -1014,6 +1028,7 @@ namespace DoranekoDB
             }
 
             this.Transaction = null;
+
             this.Connection.Close();
         }
 
@@ -1059,6 +1074,7 @@ namespace DoranekoDB
             if (this.IsTransaction)
             {
                 this.Transaction.Rollback();
+                this.Transaction = null;
             }
 
         }
@@ -1130,6 +1146,7 @@ namespace DoranekoDB
 
                     if (this.adapter != null)
                     {
+                        this.adapter.Clear();
                         this.adapter = null;
                     }
                 }

@@ -818,6 +818,113 @@ namespace SampleAndTest
         }
 
 
+        [Fact(DisplayName = "08Rollback and DataSet複数テーブル更新"), TestPriority(8)]
+        public void RollbackAndUpdate()
+        {
+
+            var testString = "あああ" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            var db = CommonData.GetDB();
+
+            db.BeginTransaction();
+
+            db.OpenDataSet($@"
+                    select top 1
+                        * 
+                    from 
+                        {DbTable.T_TEST.Name}
+                ","t1");
+
+            db.OpenDataSet($@"
+                    select top 1
+                        * 
+                    from 
+                        {DbTable.T_TEST_COPY.Name}
+                ","t2");
+
+
+            foreach (DataRow dr in db.DataSet.Tables["t1"].Rows){
+                dr[DbTable.T_TEST.TEXTDATA.Name] = testString;
+            }
+
+            foreach (DataRow dr in db.DataSet.Tables["t2"].Rows)
+            {
+                dr[DbTable.T_TEST_COPY.TEXTDATA.Name] = testString;
+            }
+
+            //更新
+            db.UpdateDataSet();
+            //ロールバック
+            db.Rollback();
+
+            db.Close();
+
+
+            db.BeginTransaction();
+
+            db.OpenDataSet($@"
+                    select top 1
+                        * 
+                    from 
+                        {DbTable.T_TEST.Name}
+                ", "t1");
+
+            db.OpenDataSet($@"
+                    select top 1
+                        * 
+                    from 
+                        {DbTable.T_TEST_COPY.Name}
+                ", "t2");
+
+
+            foreach (DataRow dr in db.DataSet.Tables["t1"].Rows)
+            {
+                //データが更新されていないことを確認
+                Assert.NotEqual(testString, dr[DbTable.T_TEST.TEXTDATA.Name].ToString());
+                dr[DbTable.T_TEST.TEXTDATA.Name] = testString;
+            }
+
+            foreach (DataRow dr in db.DataSet.Tables["t2"].Rows)
+            {
+                //データが更新されていないことを確認
+                Assert.NotEqual(testString, dr[DbTable.T_TEST_COPY.TEXTDATA.Name].ToString());
+                dr[DbTable.T_TEST_COPY.TEXTDATA.Name] = testString;
+            }
+
+            //更新（テーブルに登録される）
+            db.UpdateDataSet();
+
+            try
+            {
+                db.Commit();
+            }
+            catch
+            {
+                db.Rollback();
+            }
+
+
+            //更新されているかテスト
+            var dt = db.GetDataTable($@"
+                    select top 1
+                        *
+                    from
+                        { DbTable.T_TEST.Name}                
+                ");
+
+            Assert.Equal(testString, dt.Rows[0][DbTable.T_TEST.TEXTDATA.Name].ToString());
+
+            //更新されているかテスト
+             dt = db.GetDataTable($@"
+                    select top 1
+                        *
+                    from
+                        { DbTable.T_TEST_COPY.Name}                
+                ");
+
+            Assert.Equal(testString, dt.Rows[0][DbTable.T_TEST_COPY.TEXTDATA.Name].ToString());
+
+        }
 
     }
 
