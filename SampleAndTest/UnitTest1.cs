@@ -386,7 +386,7 @@ namespace SampleAndTest
                 ";
 
                 //こうすると常に内部パラメータが溜まるのでレスポンス的にまずくなってくる
-                var dt= db.GetDataTable(sql);
+                var dt = db.GetDataTable(sql);
 
             }
 
@@ -667,7 +667,7 @@ namespace SampleAndTest
                     //var data = Enumerable.Range(0, dataList.Count);
 
                     var tblTemp = new TableHelper(db, DbTable.T_TEST.Name, TableHelper.FIELD_GET_TYPE.Field);
-                    
+
                     Enumerable.Range(0, (dataList.Count / insertCount) + (dataList.Count % insertCount == 0 ? 0 : 1))
                                 .Select(
                                     (index) =>
@@ -692,7 +692,7 @@ namespace SampleAndTest
 
                                             foreach (var eachDic in tblTemp.Field.ToList())
                                             {
-                                                object value  = System.DBNull.Value;
+                                                object value = System.DBNull.Value;
                                                 if (data.Keys.Contains(eachDic.Key))
                                                 {
                                                     value = data[eachDic.Key];
@@ -833,17 +833,18 @@ namespace SampleAndTest
                         * 
                     from 
                         {DbTable.T_TEST.Name}
-                ","t1");
+                ", "t1");
 
             db.OpenDataSet($@"
                     select top 1
                         * 
                     from 
                         {DbTable.T_TEST_COPY.Name}
-                ","t2");
+                ", "t2");
 
 
-            foreach (DataRow dr in db.DataSet.Tables["t1"].Rows){
+            foreach (DataRow dr in db.DataSet.Tables["t1"].Rows)
+            {
                 dr[DbTable.T_TEST.TEXTDATA.Name] = testString;
             }
 
@@ -915,7 +916,7 @@ namespace SampleAndTest
             Assert.Equal(testString, dt.Rows[0][DbTable.T_TEST.TEXTDATA.Name].ToString());
 
             //更新されているかテスト
-             dt = db.GetDataTable($@"
+            dt = db.GetDataTable($@"
                     select top 1
                         *
                     from
@@ -926,7 +927,65 @@ namespace SampleAndTest
 
         }
 
+
+        [Fact(DisplayName = "09DataSet値エラーの場合"), TestPriority(9)]
+        public void UpdateErrorTest()
+        {
+            var db = CommonData.GetDB();
+
+            var errMessage = "";
+
+            //個別の処理
+            db.InsertUpdateDataDataRow = (paraSqlUpdateType, paraIsTransaction, paraIsError, paraDr, paraFieldName, paraData) =>
+            {
+
+                //エラーの場合
+                if (paraIsError == true)
+                {
+
+                    //paraDr[paraFieldName] が元のデータ　※paraDataは自動変換された値がセット
+
+                    errMessage = paraDr.Table.TableName + "【" + paraFieldName + "】でエラー";
+                    //以降の処理をキャンセル
+                    db.IsInsertUpdateCancel = true;
+                }
+                
+                return paraData;
+            };
+
+            db.OpenDataSet($@"
+                    select top 2
+                        * 
+                    from 
+                        {DbTable.T_TEST.Name}
+                ", "t1");
+
+            var firstFlag = true;
+            foreach (DataRow dr in db.DataSet.Tables["t1"].Rows)
+            {
+                if (firstFlag == true)
+                {
+                    firstFlag = false;
+                }
+                else
+                {
+                    //2件目のデータにエラーになるような大きな値をセット
+                    dr[DbTable.T_TEST.TEXTDATA.Name] = new string('t', 100000);
+                }
+                
+            }
+
+            //チェックのみ　　InsertUpdateDataDataRow　が呼ばれる
+            db.UpdateDataSet("", false);
+
+
+            Assert.NotEqual(0, errMessage.Length);
+
+            //チェック後にBULK INSERT　などの処理実行
+
+
+        }
+
+
     }
-
-
 }

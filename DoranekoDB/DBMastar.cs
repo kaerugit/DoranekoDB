@@ -944,7 +944,7 @@ namespace DoranekoDB
 
             }
 
-            if ((string.IsNullOrEmpty(tableName) == true))
+            if (updateFlag == true && (string.IsNullOrEmpty(tableName) == true))
             {
                 this.DataSet.Clear();
                 this.adapter.Clear();
